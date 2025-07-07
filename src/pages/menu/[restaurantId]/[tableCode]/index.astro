@@ -1,0 +1,60 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import MenuItemCard from "../../../../components/MenuItemCard.astro";
+import { getMenuByRestaurant } from "../../../../services/api";
+
+const { restaurantId, tableCode } = Astro.params;
+
+const menuCategories = restaurantId
+  ? await getMenuByRestaurant(restaurantId)
+  : [];
+---
+
+<Layout title="Menú del Restaurante">
+  <main class="container mx-auto p-4 sm:p-6 md:p-8">
+    <header class="text-center mb-12">
+      <h1 class="font-heading text-4xl sm:text-5xl font-bold text-accent">
+        Nuestro Menú
+      </h1>
+      <p class="text-lg text-text-secondary mt-2">
+        Estás en la mesa: <span class="font-bold text-text-primary"
+          >{tableCode}</span
+        >
+      </p>
+    </header>
+
+    {
+      menuCategories.length > 0 ? (
+        <div class="space-y-12">
+          {menuCategories.map((category) => (
+            <section>
+              <h2 class="font-heading text-3xl font-semibold border-b-2 border-accent/20 pb-2 mb-8">
+                {category.name}
+              </h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {category.items.map((item) => (
+                  <MenuItemCard
+                    imageUrl={item.imageUrl || "/placeholder-image.jpg"}
+                    name={item.name}
+                    description={item.description || "Sin descripción disponible"}
+                    price={item.price}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center text-text-secondary py-20">
+          <p class="text-xl">
+            No se pudo cargar el menú para este restaurante.
+          </p>
+          <p>
+            Por favor, asegúrate de que el restaurante exista y tenga platos
+            activos.
+          </p>
+        </div>
+      )
+    }
+  </main>
+</Layout>

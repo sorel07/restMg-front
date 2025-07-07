@@ -1,0 +1,29 @@
+---
+import Sidebar from "../components/Sidebar.astro";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | Admin Dashboard</title>
+
+    <script is:inline src="../scripts/auth.guard.ts"></script>
+  </head>
+  <body class="bg-background font-body text-text-primary antialiased">
+    <div class="flex h-screen">
+      <Sidebar />
+      <main class="flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

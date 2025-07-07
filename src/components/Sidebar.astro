@@ -1,0 +1,93 @@
+---
+const { pathname } = Astro.url;
+
+const isActive = (href: string) => {
+  if (href === "/admin") return pathname === href;
+  return pathname.startsWith(href);
+};
+---
+
+<aside class="w-64 bg-surface p-6 flex-shrink-0 flex-col hidden md:flex">
+  <header class="mb-10">
+    <a href="/admin" class="font-heading text-2xl font-bold text-accent">
+      RestMg
+    </a>
+  </header>
+
+  <nav class="flex flex-col space-y-2">
+    <a
+      href="/admin"
+      class:list={[
+        "px-4 py-2 rounded-md transition-colors",
+        { "bg-accent text-white font-semibold": isActive("/admin") },
+        { "hover:bg-accent/10": !isActive("/admin") },
+      ]}
+    >
+      Dashboard
+    </a>
+    <a
+      href="/admin/menu"
+      class:list={[
+        "px-4 py-2 rounded-md transition-colors",
+        { "bg-accent text-white font-semibold": isActive("/admin/menu") },
+        { "hover:bg-accent/10": !isActive("/admin/menu") },
+      ]}
+    >
+      Menú
+    </a>
+    <a
+      href="/admin/users"
+      class:list={[
+        "px-4 py-2 rounded-md transition-colors",
+        { "bg-accent text-white font-semibold": isActive("/admin/users") },
+        { "hover:bg-accent/10": !isActive("/admin/users") },
+      ]}
+    >
+      Usuarios
+    </a>
+    <a
+      href="/admin/reports"
+      class:list={[
+        "px-4 py-2 rounded-md transition-colors",
+        { "bg-accent text-white font-semibold": isActive("/admin/reports") },
+        { "hover:bg-accent/10": !isActive("/admin/reports") },
+      ]}
+    >
+      Reportes
+    </a>
+  </nav>
+
+  <div class="mt-auto pt-6 border-t border-white/10">
+    <button
+      id="logout-button"
+      class="w-full flex items-center gap-x-3 px-4 py-2 text-text-secondary hover:text-red-500 transition-colors"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-6 h-6"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+        ></path></svg
+      >
+      <span>Cerrar Sesión</span>
+    </button>
+  </div>
+</aside>
+
+<script>
+  import { removeToken } from "../services/auth";
+
+  const logoutButton = document.getElementById("logout-button");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      removeToken();
+      window.location.href = "/login";
+    });
+  }
+</script>

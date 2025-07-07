@@ -1,0 +1,93 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { getUsers } from "../../../services/api";
+import type { User } from "../../../types/user";
+
+let users: User[] = [];
+let error: string | null = null;
+
+try {
+  // Llamada a la API al renderizar la página en el servidor
+  users = await getUsers();
+} catch (e: any) {
+  console.error("Error al obtener usuarios:", e.message);
+  error =
+    "No se pudieron obtener los usuarios. Asegúrate de que tienes permisos de Administrador.";
+}
+---
+
+<AdminLayout title="Gestión de Usuarios">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="font-heading text-4xl font-bold">Gestión de Usuarios</h1>
+    <button
+      class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors"
+    >
+      Añadir Usuario
+    </button>
+  </div>
+
+  <div class="bg-surface rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="border-b border-white/10">
+          <tr>
+            <th class="p-4 font-semibold">Nombre</th>
+            <th class="p-4 font-semibold">Email</th>
+            <th class="p-4 font-semibold">Rol</th>
+            <th class="p-4 font-semibold">Estado</th>
+            <th class="p-4 font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            users.map((user) => (
+              <tr class="border-b border-white/10 last:border-b-0 hover:bg-white/5">
+                <td class="p-4">{user.fullName}</td>
+                <td class="p-4 text-text-secondary">{user.email}</td>
+                <td class="p-4">
+                  <span
+                    class:list={[
+                      "px-2 py-1 text-xs font-semibold rounded-full",
+                      { "bg-accent/20 text-accent": user.role === "Admin" },
+                      {
+                        "bg-blue-500/20 text-blue-400": user.role === "Kitchen",
+                      },
+                    ]}
+                  >
+                    {user.role}
+                  </span>
+                </td>
+                <td class="p-4">
+                  <span
+                    class:list={[
+                      "font-bold",
+                      {
+                        "text-green-400": user.isActive,
+                        "text-red-400": !user.isActive,
+                      },
+                    ]}
+                  >
+                    {user.isActive ? "Activo" : "Inactivo"}
+                  </span>
+                </td>
+                <td class="p-4">
+                  <button class="text-text-secondary hover:text-accent">
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    {error && <p class="text-center text-red-500 p-8">{error}</p>}
+    {
+      !error && users.length === 0 && (
+        <p class="text-center text-text-secondary p-8">
+          No se encontraron usuarios.
+        </p>
+      )
+    }
+  </div>
+</AdminLayout>

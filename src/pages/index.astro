@@ -1,0 +1,27 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Bienvenido">
+  <main
+    class="min-h-screen flex flex-col items-center justify-center text-center p-4"
+  >
+    <div class="space-y-6">
+      <h1 class="font-heading text-5xl sm:text-7xl font-bold">
+        Bienvenido a <span class="text-accent">RestMg</span>
+      </h1>
+      <p class="text-lg text-text-secondary max-w-2xl">
+        La solución digital para gestionar los pedidos de tu restaurante. Los
+        clientes escanean, piden y tú gestionas. Así de simple.
+      </p>
+      <div>
+        <a
+          href="/login"
+          class="inline-block bg-accent text-white font-heading font-bold py-3 px-8 rounded-md hover:bg-opacity-80 transition-colors duration-300"
+        >
+          Acceder al Panel
+        </a>
+      </div>
+    </div>
+  </main>
+</Layout>
