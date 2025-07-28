@@ -1,20 +1,6 @@
 ---
 import Modal from "../../../components/Modal.astro";
 import AdminLayout from "../../../layouts/AdminLayout.astro";
-import { getUsers } from "../../../services/api";
-import type { User } from "../../../types/user";
-
-let users: User[] = [];
-let error: string | null = null;
-
-try {
-  // Llamada a la API al renderizar la página en el servidor
-  users = await getUsers();
-} catch (e: any) {
-  console.error("Error al obtener usuarios:", e.message);
-  error =
-    "No se pudieron obtener los usuarios. Asegúrate de que tienes permisos de Administrador.";
-}
 ---
 
 <AdminLayout title="Gestión de Usuarios">
@@ -29,65 +15,26 @@ try {
   </div>
 
   <div class="bg-surface rounded-lg overflow-hidden">
-    <table class="w-full text-left">
-      <thead class="border-b border-white/10">
-        <tr>
-          <th class="p-4 font-semibold">Nombre</th>
-          <th class="p-4 font-semibold">Email</th>
-          <th class="p-4 font-semibold">Rol</th>
-          <th class="p-4 font-semibold">Estado</th>
-          <th class="p-4 font-semibold">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {
-          users.map((user) => (
-            <tr class="border-b border-white/10 last:border-b-0 hover:bg-white/5">
-              <td class="p-4">{user.fullName}</td>
-              <td class="p-4 text-text-secondary">{user.email}</td>
-              <td class="p-4">
-                <span
-                  class:list={[
-                    "px-2 py-1 text-xs font-semibold rounded-full",
-                    { "bg-accent/20 text-accent": user.role === "Admin" },
-                    {
-                      "bg-blue-500/20 text-blue-400": user.role === "Kitchen",
-                    },
-                  ]}
-                >
-                  {user.role}
-                </span>
-              </td>
-              <td class="p-4">
-                <span
-                  class:list={[
-                    "font-bold",
-                    {
-                      "text-green-400": user.isActive,
-                      "text-red-400": !user.isActive,
-                    },
-                  ]}
-                >
-                  {user.isActive ? "Activo" : "Inactivo"}
-                </span>
-              </td>
-              <td class="p-4">
-                <button
-                  class="edit-user-button text-text-secondary hover:text-accent"
-                  data-user-id={user.id}
-                  data-full-name={user.fullName}
-                  data-email={user.email}
-                  data-role={user.role}
-                  data-is-active={user.isActive.toString()}
-                >
-                  Editar
-                </button>
-              </td>
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="border-b border-white/10">
+          <tr>
+            <th class="p-4 font-semibold">Nombre</th>
+            <th class="p-4 font-semibold">Email</th>
+            <th class="p-4 font-semibold">Rol</th>
+            <th class="p-4 font-semibold">Estado</th>
+            <th class="p-4 font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body">
+          <tr>
+            <td colspan="5" class="text-center p-8 text-text-secondary"
+              >Cargando usuarios...</td
+            >
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- MODAL PARA CREAR/EDITAR USUARIOS -->
