@@ -1,10 +1,14 @@
 import axios, { type AxiosResponse } from "axios";
 import { getToken } from "./auth";
 
-import type { OnboardingData, OnboardResult } from "../types/restaurant";
+import type {
+  OnboardingData,
+  OnboardResult,
+  RestaurantDetails,
+} from "../types/restaurant";
 import type { MenuCategory } from "../types/menu";
 import type { LoginData, AuthResult } from "../types/auth";
-import type { User } from "../types/user";
+import type { CreateUserData, UpdateUserData, User } from "../types/user";
 
 const apiClient = axios.create({
   baseURL: import.meta.env.PUBLIC_API_URL,
@@ -44,5 +48,37 @@ export async function getMenuByRestaurant(
 
 export async function getUsers(): Promise<User[]> {
   const response = await apiClient.get("/users");
+  return response.data;
+}
+
+export async function createUser(data: CreateUserData): Promise<User> {
+  const response = await apiClient.post("/users", data);
+  return response.data;
+}
+
+export async function updateUser(
+  userId: string,
+  data: UpdateUserData
+): Promise<void> {
+  await apiClient.put(`/users/${userId}`, data);
+}
+
+export async function getMyRestaurant(): Promise<RestaurantDetails> {
+  const response = await apiClient.get("/restaurants/me");
+  return response.data;
+}
+
+export async function updateMyRestaurant(
+  data: Partial<RestaurantDetails>
+): Promise<void> {
+  await apiClient.put("/restaurants/me", data);
+}
+
+export async function uploadLogo(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiClient.post("/branding/logo", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
 }

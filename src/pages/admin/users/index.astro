@@ -1,4 +1,5 @@
 ---
+import Modal from "../../../components/Modal.astro";
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { getUsers } from "../../../services/api";
 import type { User } from "../../../types/user";
@@ -20,74 +21,172 @@ try {
   <div class="flex justify-between items-center mb-8">
     <h1 class="font-heading text-4xl font-bold">Gestión de Usuarios</h1>
     <button
-      class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors"
+      id="add-user-button"
+      class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors cursor-pointer"
     >
       Añadir Usuario
     </button>
   </div>
 
   <div class="bg-surface rounded-lg overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead class="border-b border-white/10">
-          <tr>
-            <th class="p-4 font-semibold">Nombre</th>
-            <th class="p-4 font-semibold">Email</th>
-            <th class="p-4 font-semibold">Rol</th>
-            <th class="p-4 font-semibold">Estado</th>
-            <th class="p-4 font-semibold">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            users.map((user) => (
-              <tr class="border-b border-white/10 last:border-b-0 hover:bg-white/5">
-                <td class="p-4">{user.fullName}</td>
-                <td class="p-4 text-text-secondary">{user.email}</td>
-                <td class="p-4">
-                  <span
-                    class:list={[
-                      "px-2 py-1 text-xs font-semibold rounded-full",
-                      { "bg-accent/20 text-accent": user.role === "Admin" },
-                      {
-                        "bg-blue-500/20 text-blue-400": user.role === "Kitchen",
-                      },
-                    ]}
-                  >
-                    {user.role}
-                  </span>
-                </td>
-                <td class="p-4">
-                  <span
-                    class:list={[
-                      "font-bold",
-                      {
-                        "text-green-400": user.isActive,
-                        "text-red-400": !user.isActive,
-                      },
-                    ]}
-                  >
-                    {user.isActive ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td class="p-4">
-                  <button class="text-text-secondary hover:text-accent">
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-    </div>
-    {error && <p class="text-center text-red-500 p-8">{error}</p>}
-    {
-      !error && users.length === 0 && (
-        <p class="text-center text-text-secondary p-8">
-          No se encontraron usuarios.
-        </p>
-      )
-    }
+    <table class="w-full text-left">
+      <thead class="border-b border-white/10">
+        <tr>
+          <th class="p-4 font-semibold">Nombre</th>
+          <th class="p-4 font-semibold">Email</th>
+          <th class="p-4 font-semibold">Rol</th>
+          <th class="p-4 font-semibold">Estado</th>
+          <th class="p-4 font-semibold">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          users.map((user) => (
+            <tr class="border-b border-white/10 last:border-b-0 hover:bg-white/5">
+              <td class="p-4">{user.fullName}</td>
+              <td class="p-4 text-text-secondary">{user.email}</td>
+              <td class="p-4">
+                <span
+                  class:list={[
+                    "px-2 py-1 text-xs font-semibold rounded-full",
+                    { "bg-accent/20 text-accent": user.role === "Admin" },
+                    {
+                      "bg-blue-500/20 text-blue-400": user.role === "Kitchen",
+                    },
+                  ]}
+                >
+                  {user.role}
+                </span>
+              </td>
+              <td class="p-4">
+                <span
+                  class:list={[
+                    "font-bold",
+                    {
+                      "text-green-400": user.isActive,
+                      "text-red-400": !user.isActive,
+                    },
+                  ]}
+                >
+                  {user.isActive ? "Activo" : "Inactivo"}
+                </span>
+              </td>
+              <td class="p-4">
+                <button
+                  class="edit-user-button text-text-secondary hover:text-accent"
+                  data-user-id={user.id}
+                  data-full-name={user.fullName}
+                  data-email={user.email}
+                  data-role={user.role}
+                  data-is-active={user.isActive.toString()}
+                >
+                  Editar
+                </button>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
   </div>
+
+  <!-- MODAL PARA CREAR/EDITAR USUARIOS -->
+  <Modal id="user-modal" title="Añadir Nuevo Usuario">
+    <form id="user-form" class="space-y-4">
+      <!-- Campo oculto para guardar el ID del usuario al editar -->
+      <input type="hidden" id="userId" name="id" />
+
+      <div>
+        <label
+          for="fullName"
+          class="block text-sm font-medium text-text-secondary mb-2"
+          >Nombre Completo</label
+        >
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          required
+          class="w-full bg-background border border-white/20 rounded-md p-3 text-text-primary focus:ring-accent focus:border-accent transition-colors"
+        />
+      </div>
+      <div>
+        <label
+          for="email"
+          class="block text-sm font-medium text-text-secondary mb-2"
+          >Email</label
+        >
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          class="w-full bg-background border border-white/20 rounded-md p-3 text-text-primary focus:ring-accent focus:border-accent transition-colors"
+        />
+      </div>
+      <div id="password-field">
+        <label
+          for="password"
+          class="block text-sm font-medium text-text-secondary mb-2"
+          >Contraseña</label
+        >
+        <input
+          type="password"
+          id="password"
+          name="password"
+          minlength="8"
+          class="w-full bg-background border border-white/20 rounded-md p-3 text-text-primary focus:ring-accent focus:border-accent transition-colors"
+        />
+        <p class="text-xs text-text-secondary mt-1">
+          Dejar en blanco para no cambiarla al editar.
+        </p>
+      </div>
+      <div>
+        <label
+          for="role"
+          class="block text-sm font-medium text-text-secondary mb-2">Rol</label
+        >
+        <select
+          id="role"
+          name="role"
+          required
+          class="w-full bg-background border border-white/20 rounded-md p-3 text-text-primary focus:ring-accent focus:border-accent transition-colors"
+        >
+          <option value="Kitchen">Cocina</option>
+          <option value="Admin">Administrador</option>
+        </select>
+      </div>
+      <div class="flex items-center space-x-3 pt-2">
+        <input
+          type="checkbox"
+          id="isActive"
+          name="isActive"
+          class="h-4 w-4 rounded bg-background border-white/30 text-accent focus:ring-accent"
+        />
+        <label for="isActive" class="text-sm font-medium text-text-secondary"
+          >Usuario Activo</label
+        >
+      </div>
+
+      <div class="pt-4 flex justify-end gap-x-3">
+        <button
+          type="button"
+          class="modal-close bg-surface hover:bg-white/10 text-text-primary font-bold py-2 px-4 rounded-md transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors cursor-pointer"
+        >
+          Guardar
+        </button>
+      </div>
+    </form>
+    <div id="modal-form-message" class="mt-4 text-center text-red-500"></div>
+  </Modal>
 </AdminLayout>
+
+<script>
+  import "../../../scripts/users-page.ts";
+</script>

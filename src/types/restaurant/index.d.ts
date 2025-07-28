@@ -9,3 +9,11 @@ export interface OnboardingData {
   adminEmail: string;
   adminPassword: string;
 }
+
+export interface RestaurantDetails {
+  id: string;
+  name: string;
+  brandingColor?: string;
+  logoUrl?: string;
+  clientUrl?: string;
+}

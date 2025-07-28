@@ -1,0 +1,34 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Reportes">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="font-heading text-4xl font-bold">Reportes</h1>
+    <!-- Aquí podrían ir filtros de fecha -->
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Card para reporte de pedidos -->
+    <div class="bg-surface rounded-lg p-6">
+      <h2 class="font-heading text-2xl font-semibold mb-4">
+        Historial de Pedidos
+      </h2>
+      <p class="text-text-secondary">
+        Aquí se mostrará una lista o un resumen de los pedidos realizados.
+        (Funcionalidad pendiente de implementar).
+      </p>
+    </div>
+
+    <!-- Card para reporte de más vendidos -->
+    <div class="bg-surface rounded-lg p-6">
+      <h2 class="font-heading text-2xl font-semibold mb-4">
+        Platos Más Vendidos
+      </h2>
+      <p class="text-text-secondary">
+        Aquí se mostrará un gráfico o una tabla con los platos más populares.
+        (Funcionalidad pendiente de implementar).
+      </p>
+    </div>
+  </div>
+</AdminLayout>

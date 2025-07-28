@@ -1,0 +1,49 @@
+---
+interface Props {
+  id: string;
+  title: string;
+}
+const { id, title } = Astro.props;
+---
+
+<div
+  id={id}
+  class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4"
+>
+  <!-- Backdrop: al hacer clic aquí se cierra el modal -->
+  <div class="modal-backdrop absolute inset-0"></div>
+
+  <!-- Panel del Modal -->
+  <div
+    class="modal-panel bg-surface rounded-lg shadow-xl w-full max-w-lg relative max-h-[90vh] flex flex-col"
+  >
+    <!-- Cabecera del Modal -->
+    <header
+      class="p-4 border-b border-white/10 flex justify-between items-center flex-shrink-0"
+    >
+      <h2 id={`${id}-title`} class="font-heading text-xl font-bold">{title}</h2>
+      <button
+        class="modal-close p-1 text-text-secondary hover:text-accent rounded-full cursor-pointer"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18 18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Contenido del Modal -->
+    <main class="p-6 overflow-y-auto">
+      <slot />
+    </main>
+  </div>
+</div>

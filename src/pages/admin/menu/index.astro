@@ -1,0 +1,33 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Gestión de Menú">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="font-heading text-4xl font-bold">Gestión de Menú</h1>
+    <div class="flex gap-x-4">
+      <button
+        class="bg-surface hover:bg-white/10 text-white font-bold py-2 px-4 rounded-md transition-colors cursor-pointer"
+        >Añadir Categoría</button
+      >
+      <button
+        class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors cursor-pointer"
+        >Añadir Plato</button
+      >
+    </div>
+  </div>
+
+  <!-- 
+    Contenedor donde el script 'menu-page.ts' renderizará el menú dinámicamente.
+    Incluye el estado de carga inicial.
+  -->
+  <div id="menu-container">
+    <p id="loading-message" class="text-center text-text-secondary p-8">
+      Cargando menú...
+    </p>
+  </div>
+</AdminLayout>
+
+<script>
+  import "../../../scripts/menu-page.ts";
+</script>

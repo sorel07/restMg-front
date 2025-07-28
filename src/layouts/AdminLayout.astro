@@ -1,10 +1,10 @@
 ---
+import "../styles/global.css";
 import Sidebar from "../components/Sidebar.astro";
 
 interface Props {
   title: string;
 }
-
 const { title } = Astro.props;
 ---
 
@@ -16,7 +16,13 @@ const { title } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} | Admin Dashboard</title>
 
-    <script is:inline src="../scripts/auth.guard.ts"></script>
+    <script is:inline>
+      import { isLoggedIn } from "../services/auth";
+
+      if (!isLoggedIn()) {
+        window.location.replace("/login");
+      }
+    </script>
   </head>
   <body class="bg-background font-body text-text-primary antialiased">
     <div class="flex h-screen">

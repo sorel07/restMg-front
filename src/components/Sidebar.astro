@@ -1,66 +1,44 @@
 ---
+// Obtenemos la ruta actual de la URL para poder resaltar el enlace activo.
 const { pathname } = Astro.url;
 
+// Función de ayuda para determinar si un enlace de navegación está "activo"
+// Para la ruta principal '/admin', busca una coincidencia exacta
+// Para las demás rutas, comprueba si la URL actual *comienza* con el href del enlace
+// Esto asegura que /admin/users/new también resalte el enlace /admin/users
 const isActive = (href: string) => {
   if (href === "/admin") return pathname === href;
   return pathname.startsWith(href);
 };
 ---
 
-<aside class="w-64 bg-surface p-6 flex-shrink-0 flex-col hidden md:flex">
-  <header class="mb-10">
-    <a href="/admin" class="font-heading text-2xl font-bold text-accent">
-      RestMg
+<aside
+  id="sidebar"
+  class="w-64 bg-surface p-4 flex-col flex-shrink-0 rounded-r-xl shadow-2xl z-10 transition-all duration-300 ease-in-out hidden md:flex"
+>
+  <!-- Cabecera: Contiene el logo y se mantiene simple -->
+  <header class="mb-10 h-8 flex items-center">
+    <a href="/admin" class="flex items-center gap-x-2" title="Ir al Dashboard">
+      <span
+        id="sidebar-logo-text"
+        class="font-heading text-2xl font-bold text-accent transition-opacity duration-300 whitespace-nowrap"
+      >
+        RestMg
+      </span>
     </a>
   </header>
 
-  <nav class="flex flex-col space-y-2">
+  <!-- Navegación Principal -->
+  <nav class="flex flex-col space-y-2 flex-shrink-0">
     <a
       href="/admin"
+      title="Dashboard"
       class:list={[
-        "px-4 py-2 rounded-md transition-colors",
-        { "bg-accent text-white font-semibold": isActive("/admin") },
-        { "hover:bg-accent/10": !isActive("/admin") },
+        "flex items-center gap-x-4 px-2 py-2 rounded-md transition-colors font-medium",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        { "bg-accent text-white font-semibold shadow-md": isActive("/admin") },
+        { "hover:bg-accent/10 hover:text-accent": !isActive("/admin") },
       ]}
-    >
-      Dashboard
-    </a>
-    <a
-      href="/admin/menu"
-      class:list={[
-        "px-4 py-2 rounded-md transition-colors",
-        { "bg-accent text-white font-semibold": isActive("/admin/menu") },
-        { "hover:bg-accent/10": !isActive("/admin/menu") },
-      ]}
-    >
-      Menú
-    </a>
-    <a
-      href="/admin/users"
-      class:list={[
-        "px-4 py-2 rounded-md transition-colors",
-        { "bg-accent text-white font-semibold": isActive("/admin/users") },
-        { "hover:bg-accent/10": !isActive("/admin/users") },
-      ]}
-    >
-      Usuarios
-    </a>
-    <a
-      href="/admin/reports"
-      class:list={[
-        "px-4 py-2 rounded-md transition-colors",
-        { "bg-accent text-white font-semibold": isActive("/admin/reports") },
-        { "hover:bg-accent/10": !isActive("/admin/reports") },
-      ]}
-    >
-      Reportes
-    </a>
-  </nav>
-
-  <div class="mt-auto pt-6 border-t border-white/10">
-    <button
-      id="logout-button"
-      class="w-full flex items-center gap-x-3 px-4 py-2 text-text-secondary hover:text-red-500 transition-colors"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -68,21 +46,154 @@ const isActive = (href: string) => {
         viewBox="0 0 24 24"
         stroke-width="1.5"
         stroke="currentColor"
-        class="w-6 h-6"
+        class="w-6 h-6 flex-shrink-0"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+        ></path></svg
+      >
+      <span
+        class="sidebar-text transition-opacity duration-300 whitespace-nowrap"
+        >Dashboard</span
+      >
+    </a>
+    <a
+      href="/admin/menu"
+      title="Menú"
+      class:list={[
+        "flex items-center gap-x-4 px-2 py-2 rounded-md transition-colors font-medium",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        {
+          "bg-accent text-white font-semibold shadow-md":
+            isActive("/admin/menu"),
+        },
+        { "hover:bg-accent/10 hover:text-accent": !isActive("/admin/menu") },
+      ]}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-6 h-6 flex-shrink-0"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+        ></path></svg
+      >
+      <span
+        class="sidebar-text transition-opacity duration-300 whitespace-nowrap"
+        >Menú</span
+      >
+    </a>
+    <a
+      href="/admin/users"
+      title="Usuarios"
+      class:list={[
+        "flex items-center gap-x-4 px-2 py-2 rounded-md transition-colors font-medium",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        {
+          "bg-accent text-white font-semibold shadow-md":
+            isActive("/admin/users"),
+        },
+        { "hover:bg-accent/10 hover:text-accent": !isActive("/admin/users") },
+      ]}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-6 flex-shrink-0"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+        ></path>
+      </svg>
+
+      <span
+        class="sidebar-text transition-opacity duration-300 whitespace-nowrap"
+        >Usuarios</span
+      >
+    </a>
+    <a
+      href="/admin/reports"
+      title="Reportes"
+      class:list={[
+        "flex items-center gap-x-4 px-2 py-2 rounded-md transition-colors font-medium",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        {
+          "bg-accent text-white font-semibold shadow-md":
+            isActive("/admin/reports"),
+        },
+        { "hover:bg-accent/10 hover:text-accent": !isActive("/admin/reports") },
+      ]}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-6 flex-shrink-0"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"
+        ></path>
+      </svg>
+
+      <span
+        class="sidebar-text transition-opacity duration-300 whitespace-nowrap"
+        >Reportes</span
+      >
+    </a>
+  </nav>
+
+  <div class="flex-grow flex flex-col justify-end">
+    <div id="clickable-space" class="flex-grow cursor-pointer"></div>
+  </div>
+
+  <!-- Pie de página -->
+  <footer class="pt-4 border-t border-white/10 flex-shrink-0">
+    <button
+      id="logout-button"
+      title="Cerrar Sesión"
+      class="w-full flex items-center gap-x-4 px-2 py-2 rounded-md text-text-secondary hover:bg-red-500/10 hover:text-red-400 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-6 h-6 flex-shrink-0"
         ><path
           stroke-linecap="round"
           stroke-linejoin="round"
           d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
         ></path></svg
       >
-      <span>Cerrar Sesión</span>
+      <span
+        class="sidebar-text font-medium transition-opacity duration-300 whitespace-nowrap"
+        >Cerrar Sesión</span
+      >
     </button>
-  </div>
+  </footer>
 </aside>
 
+<!-- Script del lado del cliente para manejar toda la interactividad del sidebar -->
 <script>
   import { removeToken } from "../services/auth";
 
+  // --- Lógica del Botón de Logout ---
   const logoutButton = document.getElementById("logout-button");
   if (logoutButton) {
     logoutButton.addEventListener("click", () => {
@@ -90,4 +201,61 @@ const isActive = (href: string) => {
       window.location.href = "/login";
     });
   }
+
+  // --- Lógica del Sidebar Colapsable ---
+  const sidebar = document.getElementById("sidebar");
+  const clickableSpace = document.getElementById("clickable-space");
+  const logoText = document.getElementById("sidebar-logo-text");
+  const sidebarTexts = document.querySelectorAll(".sidebar-text");
+  const iconCollapse = document.getElementById("icon-collapse");
+  const iconExpand = document.getElementById("icon-expand");
+
+  // Función que aplica los cambios visuales al DOM
+  const applySidebarState = (isOpen: boolean) => {
+    if (!sidebar) return;
+    sidebar.classList.toggle("w-64", isOpen);
+    sidebar.classList.toggle("w-20", !isOpen);
+    logoText?.classList.toggle("opacity-0", !isOpen);
+    logoText?.classList.toggle("opacity-100", isOpen);
+    logoText?.classList.toggle("hidden", !isOpen);
+    iconCollapse?.classList.toggle("hidden", !isOpen);
+    iconExpand?.classList.toggle("hidden", isOpen);
+    sidebarTexts.forEach((text) => {
+      text.classList.toggle("opacity-0", !isOpen);
+      text.classList.toggle("opacity-100", isOpen);
+      text.classList.toggle("invisible", !isOpen);
+    });
+  };
+
+  // Función que se ejecuta al hacer clic en el botón de toggle
+  const toggleSidebar = () => {
+    if (!sidebar) return;
+    const isCurrentlyOpen = sidebar.classList.contains("w-64");
+    const newIsOpenState = !isCurrentlyOpen;
+    // Guarda el nuevo estado en el almacenamiento local para persistencia
+    localStorage.setItem("sidebarOpen", newIsOpenState.toString());
+    applySidebarState(newIsOpenState);
+  };
+
+  // Asignar el evento al botón de toggle
+  clickableSpace?.addEventListener("click", toggleSidebar);
+
+  // Lógica para establecer el estado inicial cuando la página carga
+  document.addEventListener("DOMContentLoaded", () => {
+    // Lee el estado guardado del localStorage
+    const savedState = localStorage.getItem("sidebarOpen");
+    // Si no hay nada guardado, por defecto estará abierto
+    const initialStateIsOpen = savedState !== "false";
+
+    if (sidebar) {
+      // Desactiva temporalmente las transiciones para evitar un "flash" al cargar la página
+      sidebar.style.transition = "none";
+      applySidebarState(initialStateIsOpen);
+
+      // Vuelve a activar las transiciones un instante después
+      setTimeout(() => {
+        sidebar.style.transition = "";
+      }, 50);
+    }
+  });
 </script>

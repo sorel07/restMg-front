@@ -1,3 +1,6 @@
+import { jwtDecode } from "jwt-decode";
+import type { DecodedToken } from "../types/auth";
+
 const TOKEN_KEY = "authToken";
 
 export function saveToken(token: string): void {
@@ -21,4 +24,31 @@ export function removeToken(): void {
 
 export function isLoggedIn(): boolean {
   return !!getToken();
+}
+
+export function getUserSession(): DecodedToken | null {
+  if (typeof window === "undefined") {
+    return null; // No se puede acceder a localStorage en el servidor
+  }
+
+  const token = getToken();
+  if (!token) {
+    return null; // No hay usuario logueado
+  }
+
+  try {
+    // Decodificar el token para acceder a sus datos (payload)
+    const decoded: DecodedToken = jwtDecode(token);
+
+    // Opcional: Comprobar si el token ha expirado
+    if (decoded.exp * 1000 < Date.now()) {
+      removeToken(); // Limpiar token expirado
+      return null;
+    }
+
+    return decoded;
+  } catch (error) {
+    console.error("Error al decodificar el token:", error);
+    return null; // El token es inválido o malformado
+  }
 }
