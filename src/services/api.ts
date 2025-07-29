@@ -1,5 +1,6 @@
-import axios, { type AxiosResponse } from "axios";
+import axios from "axios";
 import { getToken } from "./auth";
+import type { Table } from "../types/table";
 
 import type {
   OnboardingData,
@@ -80,5 +81,10 @@ export async function uploadLogo(file: File): Promise<{ url: string }> {
   const response = await apiClient.post("/branding/logo", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return response.data;
+}
+
+export async function getTables(): Promise<Table[]> {
+  const response = await apiClient.get("/tables");
   return response.data;
 }

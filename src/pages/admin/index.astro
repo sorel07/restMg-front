@@ -1,16 +1,81 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getTables } from "../../services/api";
+import type { Table } from "../../types/table";
+
+// Obtener las mesas en el servidor
+let tables: Table[] = [];
+try {
+  tables = await getTables();
+} catch (e) {
+  // Manejar el error silenciosamente aquí, la UI mostrará un mensaje
+}
 ---
 
 <AdminLayout title="Dashboard">
-  <div class="space-y-4">
-    <h1 class="font-heading text-4xl font-bold">Bienvenido al Dashboard</h1>
-    <p class="text-text-secondary text-lg">
-      Desde aquí puedes gestionar todo tu restaurante.
-    </p>
-    <p class="text-text-secondary">
-      Usa la barra de navegación de la izquierda para empezar a gestionar tu
-      menú, usuarios y ver reportes.
-    </p>
+  <h1 class="font-heading text-4xl font-bold mb-8">Dashboard Principal</h1>
+
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+  >
+    <!-- Card para gestionar mesas y QRs -->
+    <div
+      class="md:col-span-2 lg:col-span-3 xl:col-span-4 bg-surface rounded-lg p-6"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-heading text-2xl font-semibold">Mesas y Códigos QR</h2>
+        <button
+          class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors"
+        >
+          Añadir Mesa
+        </button>
+      </div>
+
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      >
+        {
+          tables.length > 0 ? (
+            tables.map((table) => (
+              <div class="bg-background p-4 rounded-md flex flex-col items-center justify-center text-center">
+                <span
+                  class:list={[
+                    "absolute top-2 right-2 w-3 h-3 rounded-full",
+                    { "bg-green-500": table.status === "Available" },
+                    { "bg-yellow-500": table.status === "Occupied" },
+                  ]}
+                />
+                <p class="font-semibold text-lg">{table.code}</p>
+                <p class="text-xs text-text-secondary mb-3">
+                  Estado: {table.status}
+                </p>
+                <a
+                  href={`/api/tables/${table.id}/qr`}
+                  target="_blank"
+                  class="w-full text-sm bg-accent/20 text-accent font-semibold py-2 px-3 rounded-md hover:bg-accent/40 transition-colors"
+                  download={`QR-Mesa-${table.code}.png`}
+                >
+                  Generar QR
+                </a>
+              </div>
+            ))
+          ) : (
+            <p class="col-span-full text-center text-text-secondary py-8">
+              No hay mesas creadas.
+            </p>
+          )
+        }
+      </div>
+    </div>
+
+    <!-- Otras tarjetas de estadísticas (placeholders) -->
+    <div class="bg-surface rounded-lg p-6">
+      <h2 class="font-heading text-xl font-semibold">Pedidos Hoy</h2>
+      <p class="text-4xl font-bold text-accent mt-2">12</p>
+    </div>
+    <div class="bg-surface rounded-lg p-6">
+      <h2 class="font-heading text-xl font-semibold">Ingresos del Día</h2>
+      <p class="text-4xl font-bold text-accent mt-2">$540.50</p>
+    </div>
   </div>
 </AdminLayout>
