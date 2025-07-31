@@ -12,46 +12,160 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
       <p>Cargando ajustes...</p>
     </div>
 
-    <div id="form-container" class="bg-surface p-8 rounded-lg shadow-lg hidden">
-      <form id="settings-form" class="space-y-6">
-        <div class="flex flex-col items-center space-y-4">
-          <img
-            id="logo-preview"
-            src="/placeholder-image.jpg"
-            alt="Logo actual"
-            class="w-32 h-32 rounded-full object-cover border-4 border-accent"
-          />
-          <input
-            type="file"
-            id="logo-upload"
-            name="logoFile"
-            accept="image/*"
-            class="text-sm ..."
-          />
+    <div id="form-container" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 hidden">
+      <form id="settings-form" class="space-y-8">
+        <!-- Sección del Logo -->
+        <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Logo del Restaurante
+          </h3>
+          <div class="flex flex-col items-center space-y-4">
+            <div class="relative group">
+              <img
+                id="logo-preview"
+                src="/profile_placeholder-image.jpg"
+                alt="Logo actual"
+                class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg group-hover:shadow-xl transition-shadow duration-300 bg-gray-100"
+                style="min-height: 128px; min-width: 128px;"
+              />
+              <div class="absolute inset-0 rounded-full bg-transparent group-hover:bg-black group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center pointer-events-none">
+                <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="relative">
+              <input
+                type="file"
+                id="logo-upload"
+                name="logoFile"
+                accept="image/*"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <span>Subir nuevo logo</span>
+              </button>
+            </div>
+            <button 
+              type="button" 
+              id="reset-logo-btn"
+              class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              <span>Usar imagen por defecto</span>
+            </button>
+            <p class="text-sm text-gray-500 text-center">Recomendado: 512x512px, formato PNG o JPG</p>
+          </div>
         </div>
-        <div>
-          <label for="name" class="block ...">Nombre del Restaurante</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            class="w-full ..."
-          />
+
+        <!-- Sección de Información del Restaurante -->
+        <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            Información del Restaurante
+          </h3>
+          <div class="space-y-4">
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                Nombre del Restaurante
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                placeholder="Ej: La Taverna Italiana"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+              />
+            </div>
+          </div>
         </div>
-        <div>
-          <label for="brandingColor" class="block ...">Color de la Marca</label>
-          <input
-            type="color"
-            id="brandingColor"
-            name="brandingColor"
-            value="#E55959"
-            class="w-full ..."
-          />
+
+        <!-- Sección de Personalización -->
+        <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17v4a2 2 0 002 2h4M15 5l2 2"></path>
+            </svg>
+            Personalización de Marca
+          </h3>
+          <div class="space-y-4">
+            <div>
+              <label for="brandingColor" class="block text-sm font-medium text-gray-700 mb-3">
+                Color Principal de la Marca
+              </label>
+              <div class="flex items-center space-x-4">
+                <div class="relative">
+                  <input
+                    type="color"
+                    id="brandingColor"
+                    name="brandingColor"
+                    value="#E55959"
+                    class="w-16 h-16 rounded-xl border-4 border-white shadow-lg cursor-pointer"
+                  />
+                </div>
+                <div class="flex-1">
+                  <input
+                    type="text"
+                    id="colorHex"
+                    placeholder="#E55959"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white font-mono text-sm"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">Este color se usará en botones, enlaces y elementos destacados</p>
+                </div>
+              </div>
+              <!-- Paleta de colores sugeridos -->
+              <div class="mt-4">
+                <p class="text-sm text-gray-600 mb-2">Colores sugeridos:</p>
+                <div class="flex space-x-2">
+                  <button type="button" class="w-8 h-8 rounded-lg bg-red-500 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#EF4444"></button>
+                  <button type="button" class="w-8 h-8 rounded-lg bg-blue-500 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#3B82F6"></button>
+                  <button type="button" class="w-8 h-8 rounded-lg bg-green-500 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#10B981"></button>
+                  <button type="button" class="w-8 h-8 rounded-lg bg-purple-500 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#8B5CF6"></button>
+                  <button type="button" class="w-8 h-8 rounded-lg bg-yellow-500 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#F59E0B"></button>
+                  <button type="button" class="w-8 h-8 rounded-lg bg-pink-500 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#EC4899"></button>
+                  <button type="button" class="w-8 h-8 rounded-lg bg-indigo-500 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#6366F1"></button>
+                  <button type="button" class="w-8 h-8 rounded-lg bg-gray-800 hover:scale-110 transition-transform duration-200 border-2 border-white shadow-md" data-color="#1F2937"></button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <button type="submit" class="w-full ...">Guardar Cambios</button>
+
+        <!-- Botones de Acción -->
+        <div class="flex space-x-4 pt-6">
+          <button 
+            type="button" 
+            id="cancel-btn"
+            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-4 px-6 rounded-xl transition-all duration-200 border border-gray-300"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            <span class="flex items-center justify-center space-x-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span>Guardar Cambios</span>
+            </span>
+          </button>
+        </div>
       </form>
-      <div id="form-message" class="mt-4 text-center"></div>
+      <div id="form-message" class="mt-6 text-center"></div>
     </div>
   </div>
 </AdminLayout>
