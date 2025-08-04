@@ -1,14 +1,14 @@
-import axios from "axios";
-import { getToken } from "./auth";
+import axios, { type AxiosResponse } from "axios";
 import type { Table } from "../types/table";
+import { getToken } from "./auth";
 
+import type { AuthResult, LoginData } from "../types/auth";
+import type { MenuCategory } from "../types/menu";
 import type {
   OnboardingData,
   OnboardResult,
   RestaurantDetails,
 } from "../types/restaurant";
-import type { MenuCategory } from "../types/menu";
-import type { LoginData, AuthResult } from "../types/auth";
 import type { CreateUserData, UpdateUserData, User } from "../types/user";
 
 const apiClient = axios.create({
@@ -44,6 +44,20 @@ export async function getMenuByRestaurant(
   restaurantId: string
 ): Promise<MenuCategory[]> {
   const response = await apiClient.get(`/menu?restaurantId=${restaurantId}`);
+  return response.data;
+}
+
+// Función para subir imágenes
+export async function uploadImage(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await apiClient.post('/upload', formData, {
+    headers: { 
+      'Content-Type': 'multipart/form-data' 
+    },
+  });
+  
   return response.data;
 }
 
@@ -88,3 +102,30 @@ export async function getTables(): Promise<Table[]> {
   const response = await apiClient.get("/tables");
   return response.data;
 }
+
+export async function getMenuBySubdomain(
+  subdomain: string
+): Promise<MenuCategory[]> {
+  try {
+    // Esta petición no necesita token de autenticación.
+    const response: AxiosResponse<MenuCategory[]> = await apiClient.get(
+      `/menu/by-subdomain/${subdomain}`
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      // Si el backend devuelve 404, significa que el subdominio no existe.
+      console.warn(
+        `No se encontró un restaurante con el subdominio: ${subdomain}`
+      );
+      return [];
+    }
+    // Para otros errores (ej. de red), lanzar el error para que la página lo capture.
+    console.error("Error al obtener el menú por subdominio:", error);
+    throw error;
+  }
+}
+
+// Exportar la instancia del cliente API para uso directo
+export { apiClient };
+

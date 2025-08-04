@@ -1,13 +1,25 @@
 ---
-import Layout from "../../../../layouts/Layout.astro";
-import MenuItemCard from "../../../../components/MenuItemCard.astro";
-import { getMenuByRestaurant } from "../../../../services/api";
+import Layout from "../../../../../layouts/Layout.astro";
+import MenuItemCard from "../../../../../components/MenuItemCard.astro";
+import { getMenuBySubdomain } from "../../../../../services/api";
+import type { MenuCategory } from "../../../../../types/menu";
 
-const { restaurantId, tableCode } = Astro.params;
+// Astro nos da los parámetros de la ruta directamente
+const { subdomain, tableCode } = Astro.params;
 
-const menuCategories = restaurantId
-  ? await getMenuByRestaurant(restaurantId)
-  : [];
+let menuCategories: MenuCategory[] = [];
+let error: string | null = null;
+
+if (!subdomain) {
+  error = "Restaurante no encontrado. La URL es incorrecta.";
+} else {
+  try {
+    // Usamos el nuevo endpoint que busca por subdominio
+    menuCategories = await getMenuBySubdomain(subdomain);
+  } catch (e) {
+    error = "No se pudo cargar el menú para este restaurante.";
+  }
+}
 ---
 
 <Layout title="Menú del Restaurante">
@@ -36,7 +48,9 @@ const menuCategories = restaurantId
                   <MenuItemCard
                     imageUrl={item.imageUrl || "/placeholder-image.jpg"}
                     name={item.name}
-                    description={item.description || "Sin descripción disponible"}
+                    description={
+                      item.description || "Sin descripción disponible"
+                    }
                     price={item.price}
                   />
                 ))}

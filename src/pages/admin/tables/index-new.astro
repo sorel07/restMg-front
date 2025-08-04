@@ -1,0 +1,243 @@
+---
+// Pre-renderizar esta página estáticamente
+export const prerender = true;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Gestión de Mesas">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="font-heading text-4xl font-bold text-text-primary">
+      Gestión de Mesas
+    </h1>
+    <button
+      id="add-table-btn"
+      class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95 hover:shadow-lg"
+    >
+      Añadir Mesa
+    </button>
+  </div>
+
+  <!-- Contenedor principal de las mesas -->
+  <div id="tables-container">
+    <div id="loading-message" class="text-center text-text-secondary p-8">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"
+      >
+      </div>
+      <p>Cargando mesas...</p>
+    </div>
+
+    <div id="error-message" class="hidden text-center text-red-400 p-8">
+      <p>Error al cargar las mesas. Por favor, intenta nuevamente.</p>
+      <button
+        id="retry-btn"
+        class="mt-4 bg-accent text-white px-4 py-2 rounded-md hover:bg-opacity-80"
+      >
+        Reintentar
+      </button>
+    </div>
+
+    <div id="tables-content" class="hidden">
+      <div 
+        id="tables-grid" 
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        <!-- Las mesas se renderizarán aquí dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Crear/Editar Mesa -->
+  <div
+    id="table-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden opacity-0 transition-opacity duration-300"
+  >
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div
+        id="table-modal-content"
+        class="bg-surface rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300"
+      >
+        <!-- Header del Modal -->
+        <div class="flex justify-between items-center p-6 border-b border-white/10">
+          <h2
+            id="table-modal-title"
+            class="font-heading text-xl font-semibold text-text-primary"
+          >
+            Añadir Mesa
+          </h2>
+          <button
+            id="close-table-modal"
+            class="text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Formulario -->
+        <form id="table-form" class="p-6 space-y-4">
+          <div class="space-y-2">
+            <label
+              for="table-code"
+              class="flex items-center gap-2 text-text-primary font-medium text-sm"
+            >
+              <svg
+                class="w-4 h-4 text-accent"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                ></path>
+              </svg>
+              Código de la Mesa
+            </label>
+            <input
+              id="table-code"
+              name="code"
+              type="text"
+              required
+              placeholder="Ej: Mesa 01, Barra 2"
+              class="w-full px-3 py-2.5 text-sm bg-background text-text-primary border border-white/20 rounded-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
+            />
+          </div>
+
+          <!-- Campo de estado (solo visible al editar) -->
+          <div id="table-status-container" class="space-y-2 hidden">
+            <label
+              for="table-status"
+              class="flex items-center gap-2 text-text-primary font-medium text-sm"
+            >
+              <svg
+                class="w-4 h-4 text-accent"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              Estado
+            </label>
+            <select
+              id="table-status"
+              name="status"
+              class="w-full px-3 py-2.5 text-sm bg-background text-text-primary border border-white/20 rounded-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
+            >
+              <option value="Available">Disponible</option>
+              <option value="Occupied">Ocupada</option>
+            </select>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex gap-3 pt-4">
+            <button
+              type="button"
+              id="cancel-table-btn"
+              class="flex-1 px-4 py-2.5 text-sm font-medium text-text-secondary bg-background border border-white/20 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-accent rounded-lg hover:bg-opacity-80 transition-colors"
+            >
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para QR -->
+  <div
+    id="qr-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden opacity-0 transition-opacity duration-300"
+  >
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div
+        id="qr-modal-content"
+        class="bg-surface rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300"
+      >
+        <!-- Header del Modal -->
+        <div class="flex justify-between items-center p-6 border-b border-white/10">
+          <h2
+            id="qr-modal-title"
+            class="font-heading text-xl font-semibold text-text-primary"
+          >
+            Código QR
+          </h2>
+          <button
+            id="close-qr-modal"
+            class="text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Contenido del QR -->
+        <div class="p-6 text-center space-y-4">
+          <div class="bg-white p-4 rounded-lg inline-block">
+            <img
+              id="qr-image"
+              alt="Código QR"
+              class="w-48 h-48 mx-auto"
+              style="display: none;"
+            />
+            <div id="qr-loading" class="w-48 h-48 flex items-center justify-center">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <button
+              id="download-qr-btn"
+              class="w-full bg-accent text-white font-medium py-2.5 px-4 rounded-lg hover:bg-opacity-80 transition-colors"
+            >
+              Descargar QR
+            </button>
+            <button
+              id="close-qr-btn"
+              class="w-full bg-background text-text-primary border border-white/20 font-medium py-2.5 px-4 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../scripts/tables-page.ts"></script>
+</AdminLayout>

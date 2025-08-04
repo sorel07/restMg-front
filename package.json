@@ -9,6 +9,8 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^9.3.3",
+    "@astrojs/vercel": "^8.2.5",
     "@fontsource-variable/roboto": "^5.2.6",
     "@fontsource/poppins": "^5.2.6",
     "@tailwindcss/vite": "^4.1.11",

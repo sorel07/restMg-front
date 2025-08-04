@@ -1,4 +1,7 @@
 ---
+// Pre-renderizar esta página estáticamente
+export const prerender = true;
+
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { getTables } from "../../services/api";
 import type { Table } from "../../types/table";

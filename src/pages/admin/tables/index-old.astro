@@ -1,0 +1,133 @@
+---
+// Pre-renderizar esta página estáticamente
+export const prerender = true;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Gestión de Mesas">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="font-heading text-4xl font-bold text-text-primary">Gestión de Mesas</h1>
+    <button
+      id="add-table-btn"
+      class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors cursor-pointer"
+    >
+      Añadir Mesa
+    </button>
+  </div>
+
+  <!-- Contenedor principal de mesas -->
+  <div id="tables-container">
+    <div id="loading-message" class="text-center text-text-secondary p-8">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+      <p>Cargando mesas...</p>
+    </div>
+    
+    <div id="error-message" class="hidden text-center text-red-400 p-8">
+      <p>Error al cargar las mesas. Por favor, intenta nuevamente.</p>
+      <button id="retry-btn" class="mt-4 bg-accent text-white px-4 py-2 rounded-md hover:bg-opacity-80">
+        Reintentar
+      </button>
+    </div>
+    
+    <div id="tables-content" class="hidden">
+      <!-- Las mesas se renderizarán aquí dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Modal para añadir/editar mesa -->
+  <div id="table-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-surface p-6 rounded-lg w-full max-w-md">
+        <h2 id="table-modal-title" class="font-heading text-2xl font-bold text-text-primary mb-4">Añadir Mesa</h2>
+        
+        <form id="table-form" class="space-y-4">
+          <div>
+            <label for="table-code" class="block text-text-primary font-medium mb-2">Código de la Mesa</label>
+            <input
+              type="text"
+              id="table-code"
+              name="code"
+              required
+              placeholder="Ej: Mesa 1, M-001, etc."
+              class="w-full px-3 py-2 bg-background text-text-primary border border-white/20 rounded-md focus:outline-none focus:border-accent"
+            />
+          </div>
+          
+          <div id="table-status-container" class="hidden">
+            <label for="table-status" class="block text-text-primary font-medium mb-2">Estado</label>
+            <select
+              id="table-status"
+              name="status"
+              class="w-full px-3 py-2 bg-background text-text-primary border border-white/20 rounded-md focus:outline-none focus:border-accent"
+            >
+              <option value="Available">Disponible</option>
+              <option value="Occupied">Ocupada</option>
+              <option value="Reserved">Reservada</option>
+              <option value="OutOfOrder">Fuera de Servicio</option>
+            </select>
+          </div>
+          
+          <div class="flex gap-x-4 pt-4">
+            <button
+              type="button"
+              id="cancel-table-btn"
+              class="flex-1 bg-background text-text-secondary border border-white/20 py-2 px-4 rounded-md hover:bg-white/10 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              id="save-table-btn"
+              class="flex-1 bg-accent text-white py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors"
+            >
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para mostrar código QR -->
+  <div id="qr-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-surface p-6 rounded-lg w-full max-w-md">
+        <h2 class="font-heading text-2xl font-bold text-text-primary mb-4">Código QR</h2>
+        
+        <div class="text-center">
+          <div id="qr-container" class="mb-4">
+            <div id="qr-loading" class="py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-2"></div>
+              <p class="text-text-secondary">Generando código QR...</p>
+            </div>
+            <img id="qr-image" class="hidden mx-auto max-w-full" alt="Código QR de la mesa" />
+          </div>
+          
+          <p id="qr-table-name" class="text-text-primary mb-4"></p>
+          
+          <div class="flex gap-x-4">
+            <button
+              type="button"
+              id="close-qr-btn"
+              class="flex-1 bg-background text-text-secondary border border-white/20 py-2 px-4 rounded-md hover:bg-white/10 transition-colors"
+            >
+              Cerrar
+            </button>
+            <button
+              type="button"
+              id="download-qr-btn"
+              class="flex-1 bg-accent text-white py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors"
+            >
+              Descargar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import "../../../scripts/tables-page.ts";
+</script>
