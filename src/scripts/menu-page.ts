@@ -538,13 +538,13 @@ class MenuPageManager {
           <div class="flex gap-x-2">
             <button 
               onclick="menuManager.editCategory('${category.id}')"
-              class="bg-background text-text-primary px-3 py-1 rounded text-sm hover:bg-white/10 transition-colors"
+              class="bg-background text-text-primary cursor-pointer px-3 py-1 rounded text-sm hover:bg-white/10 transition-colors"
             >
               Editar
             </button>
             <button 
               onclick="menuManager.deleteCategory('${category.id}')"
-              class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+              class="bg-red-600 text-white cursor-pointer px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
             >
               Eliminar
             </button>
@@ -570,7 +570,7 @@ class MenuPageManager {
     const cardOpacity = item.isAvailable ? '' : 'opacity-75';
 
     return `
-      <div class="bg-background rounded-lg p-4 border border-white/10 relative ${cardOpacity}">
+      <div class="bg-background rounded-lg p-4 border border-white/10 relative ${cardOpacity}" data-item-id="${item.id}">
         ${imageHtml}
         <h3 class="font-bold text-text-primary mb-2">${item.name}</h3>
         ${item.description ? `<p class="text-text-secondary text-sm mb-3">${item.description}</p>` : ''}
@@ -592,13 +592,13 @@ class MenuPageManager {
         <div class="flex gap-x-2">
           <button 
             onclick="menuManager.editItem('${item.id}')"
-            class="flex-1 bg-surface text-text-primary px-3 py-1 rounded text-sm hover:bg-white/10 transition-colors"
+            class="flex-1 bg-surface text-text-primary cursor-pointer px-3 py-1 rounded text-sm hover:bg-white/10 transition-colors"
           >
             Editar
           </button>
           <button 
             onclick="menuManager.deleteItem('${item.id}')"
-            class="flex-1 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+            class="flex-1 bg-red-600 text-white cursor-pointer px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
           >
             Eliminar
           </button>
@@ -988,6 +988,9 @@ class MenuPageManager {
       // Actualizar el estado local sin recargar toda la página
       item.isAvailable = isAvailable;
       
+      // Actualizar la UI dinámicamente
+      this.updateItemAvailabilityUI(itemId, isAvailable);
+      
       notificationManager.success(
         `Item ${isAvailable ? 'habilitado' : 'deshabilitado'} correctamente`
       );
@@ -997,6 +1000,48 @@ class MenuPageManager {
       notificationManager.error('Error al actualizar la disponibilidad. Por favor, intenta nuevamente.');
       // Revertir el toggle en caso de error
       await this.loadMenu();
+    }
+  }
+
+  /**
+   * Actualiza dinámicamente la UI de disponibilidad de un item sin recargar toda la página
+   */
+  private updateItemAvailabilityUI(itemId: string, isAvailable: boolean) {
+    // Buscar la tarjeta del item específico usando el atributo data-item-id
+    const itemCard = document.querySelector(`[data-item-id="${itemId}"]`) as HTMLElement;
+    if (!itemCard) {
+      console.warn(`No se encontró la tarjeta para el item ${itemId}`);
+      return;
+    }
+
+    this.updateItemCardUI(itemCard, isAvailable);
+  }
+
+  /**
+   * Actualiza los elementos visuales de una tarjeta de item específica
+   */
+  private updateItemCardUI(card: HTMLElement, isAvailable: boolean) {
+    // Actualizar el texto de disponibilidad
+    const availabilitySpan = card.querySelector('.text-green-400, .text-red-400');
+    if (availabilitySpan) {
+      availabilitySpan.className = availabilitySpan.className.replace(
+        /text-(green|red)-400/g, 
+        isAvailable ? 'text-green-400' : 'text-red-400'
+      );
+      availabilitySpan.textContent = isAvailable ? 'Disponible' : 'No disponible';
+    }
+
+    // Actualizar la opacidad de la tarjeta
+    if (isAvailable) {
+      card.classList.remove('opacity-75');
+    } else {
+      card.classList.add('opacity-75');
+    }
+
+    // El checkbox ya debería estar actualizado por el navegador, pero por si acaso
+    const checkbox = card.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    if (checkbox) {
+      checkbox.checked = isAvailable;
     }
   }
 }

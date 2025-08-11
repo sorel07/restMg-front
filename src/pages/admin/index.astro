@@ -3,82 +3,322 @@
 export const prerender = true;
 
 import AdminLayout from "../../layouts/AdminLayout.astro";
-import { getTables } from "../../services/api";
-import type { Table } from "../../types/table";
-
-// Obtener las mesas en el servidor
-let tables: Table[] = [];
-try {
-  tables = await getTables();
-} catch (e) {
-  // Manejar el error silenciosamente aquí, la UI mostrará un mensaje
-}
 ---
 
 <AdminLayout title="Dashboard">
-  <h1 class="font-heading text-4xl font-bold mb-8">Dashboard Principal</h1>
-
-  <div
-    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-  >
-    <!-- Card para gestionar mesas y QRs -->
-    <div
-      class="md:col-span-2 lg:col-span-3 xl:col-span-4 bg-surface rounded-lg p-6"
-    >
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="font-heading text-2xl font-semibold">Mesas y Códigos QR</h2>
-        <button
-          class="bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors"
-        >
-          Añadir Mesa
-        </button>
+  <div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="font-heading text-4xl font-bold text-text-primary">Dashboard Principal</h1>
+        <p class="text-text-secondary mt-2">Resumen del día y accesos rápidos</p>
       </div>
-
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-      >
-        {
-          tables.length > 0 ? (
-            tables.map((table) => (
-              <div class="bg-background p-4 rounded-md flex flex-col items-center justify-center text-center">
-                <span
-                  class:list={[
-                    "absolute top-2 right-2 w-3 h-3 rounded-full",
-                    { "bg-green-500": table.status === "Available" },
-                    { "bg-yellow-500": table.status === "Occupied" },
-                  ]}
-                />
-                <p class="font-semibold text-lg">{table.code}</p>
-                <p class="text-xs text-text-secondary mb-3">
-                  Estado: {table.status}
-                </p>
-                <a
-                  href={`/api/tables/${table.id}/qr`}
-                  target="_blank"
-                  class="w-full text-sm bg-accent/20 text-accent font-semibold py-2 px-3 rounded-md hover:bg-accent/40 transition-colors"
-                  download={`QR-Mesa-${table.code}.png`}
-                >
-                  Generar QR
-                </a>
-              </div>
-            ))
-          ) : (
-            <p class="col-span-full text-center text-text-secondary py-8">
-              No hay mesas creadas.
-            </p>
-          )
-        }
+      <div class="text-right flex items-center gap-4">
+        <!-- Indicador de Conexión SignalR -->
+        <div class="flex items-center gap-2">
+          <div id="connection-indicator" class="w-3 h-3 bg-gray-500 rounded-full animate-pulse"></div>
+          <span id="connection-status" class="text-text-secondary text-sm">Conectando...</span>
+        </div>
+        
+        <!-- Timestamp -->
+        <div class="text-right">
+          <p class="text-text-secondary text-sm">Última actualización</p>
+          <p id="last-updated" class="text-text-primary font-medium">--:--</p>
+        </div>
       </div>
     </div>
 
-    <!-- Otras tarjetas de estadísticas (placeholders) -->
-    <div class="bg-surface rounded-lg p-6">
-      <h2 class="font-heading text-xl font-semibold">Pedidos Hoy</h2>
-      <p class="text-4xl font-bold text-accent mt-2">12</p>
+    <!-- KPIs del Día -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <!-- Widget 1: Ingresos del Día -->
+      <div class="bg-surface rounded-xl p-6 border border-white/10 hover:border-accent/30 transition-colors cursor-pointer group" 
+           onclick="window.location.href='/admin/reports'">
+        <div class="flex items-center justify-between mb-4">
+          <div class="p-3 bg-green-600/20 rounded-lg">
+            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+          </div>
+          <svg class="w-4 h-4 text-text-secondary group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-text-secondary text-sm font-medium mb-1">Ingresos de Hoy</h3>
+          <div id="revenue-loading" class="flex items-center space-x-2">
+            <div class="w-4 h-4 bg-gray-600 rounded animate-pulse"></div>
+            <div class="w-16 h-6 bg-gray-600 rounded animate-pulse"></div>
+          </div>
+          <p id="revenue-amount" class="text-2xl font-bold text-text-primary hidden">$0</p>
+        </div>
+      </div>
+
+      <!-- Widget 2: Pedidos del Día -->
+      <div class="bg-surface rounded-xl p-6 border border-white/10 hover:border-accent/30 transition-colors cursor-pointer group" 
+           onclick="window.location.href='/admin/reports'">
+        <div class="flex items-center justify-between mb-4">
+          <div class="p-3 bg-blue-600/20 rounded-lg">
+            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"></path>
+            </svg>
+          </div>
+          <svg class="w-4 h-4 text-text-secondary group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-text-secondary text-sm font-medium mb-1">Pedidos de Hoy</h3>
+          <div id="orders-loading" class="flex items-center space-x-2">
+            <div class="w-4 h-4 bg-gray-600 rounded animate-pulse"></div>
+            <div class="w-12 h-6 bg-gray-600 rounded animate-pulse"></div>
+          </div>
+          <p id="orders-count" class="text-2xl font-bold text-text-primary hidden">0</p>
+        </div>
+      </div>
+
+      <!-- Widget 3: Ticket Promedio -->
+      <div class="bg-surface rounded-xl p-6 border border-white/10">
+        <div class="flex items-center justify-between mb-4">
+          <div class="p-3 bg-purple-600/20 rounded-lg">
+            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-text-secondary text-sm font-medium mb-1">Ticket Promedio</h3>
+          <div id="average-loading" class="flex items-center space-x-2">
+            <div class="w-4 h-4 bg-gray-600 rounded animate-pulse"></div>
+            <div class="w-16 h-6 bg-gray-600 rounded animate-pulse"></div>
+          </div>
+          <p id="average-ticket" class="text-2xl font-bold text-text-primary hidden">$0</p>
+        </div>
+      </div>
+
+      <!-- Widget 4: Top Platos del Día -->
+      <div class="bg-surface rounded-xl p-6 border border-white/10 hover:border-accent/30 transition-colors cursor-pointer group" 
+           onclick="window.location.href='/admin/reports'">
+        <div class="flex items-center justify-between mb-4">
+          <div class="p-3 bg-yellow-600/20 rounded-lg">
+            <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+            </svg>
+          </div>
+          <svg class="w-4 h-4 text-text-secondary group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-text-secondary text-sm font-medium mb-3">Top Platos de Hoy</h3>
+          <div id="top-dishes-loading" class="space-y-2">
+            <div class="flex items-center space-x-2">
+              <div class="w-4 h-4 bg-gray-600 rounded animate-pulse"></div>
+              <div class="flex-1 h-3 bg-gray-600 rounded animate-pulse"></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-4 h-4 bg-gray-600 rounded animate-pulse"></div>
+              <div class="flex-1 h-3 bg-gray-600 rounded animate-pulse"></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-4 h-4 bg-gray-600 rounded animate-pulse"></div>
+              <div class="flex-1 h-3 bg-gray-600 rounded animate-pulse"></div>
+            </div>
+          </div>
+          <div id="top-dishes-list" class="space-y-2 hidden">
+            <!-- Los top platos se renderizarán aquí -->
+          </div>
+          <div id="top-dishes-empty" class="hidden">
+            <p class="text-text-secondary text-sm">No hay datos del día</p>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="bg-surface rounded-lg p-6">
-      <h2 class="font-heading text-xl font-semibold">Ingresos del Día</h2>
-      <p class="text-4xl font-bold text-accent mt-2">$540.50</p>
+
+    <!-- Sección de Acciones Rápidas -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <!-- Widget: Gestión de Mesas y QRs -->
+      <div class="xl:col-span-2 bg-surface rounded-xl p-6 border border-white/10">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-accent/20 rounded-lg">
+              <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="font-heading text-xl font-semibold text-text-primary">Mesas y Códigos QR</h2>
+              <p class="text-text-secondary text-sm">Gestión rápida de mesas</p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button
+              id="add-table-btn"
+              class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition-colors font-medium text-sm"
+            >
+              Añadir Mesa
+            </button>
+            <button
+              onclick="window.location.href='/admin/tables'"
+              class="bg-background text-text-primary border border-white/20 px-4 py-2 rounded-lg hover:bg-white/5 transition-colors font-medium text-sm"
+            >
+              Ver Todas
+            </button>
+          </div>
+        </div>
+        
+        <div id="tables-container" class="min-h-[200px]">
+          <!-- Loading state -->
+          <div id="tables-loading" class="flex items-center justify-center py-12">
+            <div class="w-8 h-8 border-4 border-gray-300 border-t-accent rounded-full animate-spin"></div>
+          </div>
+          
+          <!-- Error state -->
+          <div id="tables-error" class="hidden text-center py-12">
+            <svg class="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-red-400 mb-2">Error al cargar las mesas</p>
+            <button id="retry-tables-btn" class="text-accent hover:text-accent/80 text-sm">
+              Intentar nuevamente
+            </button>
+          </div>
+          
+          <!-- Empty state -->
+          <div id="tables-empty" class="hidden text-center py-12">
+            <svg class="w-12 h-12 text-text-secondary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+            </svg>
+            <p class="text-text-secondary">No hay mesas creadas</p>
+          </div>
+          
+          <!-- Tables grid -->
+          <div id="tables-grid" class="hidden">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="tables-grid-inner">
+              <!-- Las mesas se renderizarán aquí dinámicamente -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget: Comandas Recientes -->
+      <div class="bg-surface rounded-xl p-6 border border-white/10">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-orange-600/20 rounded-lg">
+              <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="font-heading text-lg font-semibold text-text-primary">Comandas Recientes</h2>
+              <p class="text-text-secondary text-xs">Últimos pedidos</p>
+            </div>
+          </div>
+        </div>
+        
+        <div id="recent-orders-container" class="min-h-[200px]">
+          <!-- Loading state -->
+          <div id="recent-orders-loading" class="space-y-3">
+            <div class="bg-background p-3 rounded-lg animate-pulse">
+              <div class="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
+              <div class="h-3 bg-gray-600 rounded w-1/2"></div>
+            </div>
+            <div class="bg-background p-3 rounded-lg animate-pulse">
+              <div class="h-4 bg-gray-600 rounded w-2/3 mb-2"></div>
+              <div class="h-3 bg-gray-600 rounded w-1/3"></div>
+            </div>
+            <div class="bg-background p-3 rounded-lg animate-pulse">
+              <div class="h-4 bg-gray-600 rounded w-4/5 mb-2"></div>
+              <div class="h-3 bg-gray-600 rounded w-1/2"></div>
+            </div>
+          </div>
+          
+          <!-- Error state -->
+          <div id="recent-orders-error" class="hidden text-center py-12">
+            <svg class="w-8 h-8 text-red-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-red-400 text-sm mb-2">Error al cargar pedidos</p>
+            <button id="retry-orders-btn" class="text-accent hover:text-accent/80 text-xs">
+              Intentar nuevamente
+            </button>
+          </div>
+          
+          <!-- Empty state -->
+          <div id="recent-orders-empty" class="hidden text-center py-12">
+            <svg class="w-8 h-8 text-text-secondary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-text-secondary text-sm">No hay pedidos recientes</p>
+          </div>
+          
+          <!-- Orders list -->
+          <div id="recent-orders-list" class="hidden space-y-3">
+            <!-- Las comandas se renderizarán aquí dinámicamente -->
+          </div>
+        </div>
+        
+        <div class="mt-4 pt-4 border-t border-white/10">
+          <button
+            onclick="window.location.href='/admin/kitchen'"
+            class="w-full bg-orange-600/20 text-orange-400 hover:bg-orange-600/30 py-2 px-4 rounded-lg transition-colors font-medium text-sm"
+          >
+            Ir a la Cocina
+          </button>
+        </div>
+      </div>
     </div>
   </div>
+
+  <script src="../../scripts/dashboard-page.ts"></script>
 </AdminLayout>
+
+<style>
+  /* Animaciones suaves */
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Hover effects para los widgets */
+  .cursor-pointer:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Loading pulses */
+  .animate-pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .xl\\:col-span-2 {
+      grid-column: span 1;
+    }
+  }
+</style>
+
+<!-- Script del Dashboard en Tiempo Real -->
+<script src="../../scripts/dashboard-realtime.ts"></script>

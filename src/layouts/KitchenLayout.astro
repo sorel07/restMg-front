@@ -1,0 +1,117 @@
+---
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Vista de Cocina - RestMg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | RestMg Kitchen</title>
+  </head>
+  <body class="bg-background text-text-primary min-h-screen">
+    <!-- Header específico para cocina -->
+    <header class="bg-surface border-b border-white/10 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <!-- Logo y título -->
+        <div class="flex items-center gap-4">
+          <div class="p-2 bg-orange-600/20 rounded-lg">
+            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="font-heading text-xl font-bold text-text-primary">RestMg Kitchen</h1>
+            <p class="text-text-secondary text-sm">Panel de Cocina</p>
+          </div>
+        </div>
+
+        <!-- Información del usuario y logout -->
+        <div class="flex items-center gap-4">
+          <!-- Información del usuario -->
+          <div class="text-right">
+            <p id="user-name" class="text-sm font-medium text-text-primary">Usuario Cocina</p>
+            <p class="text-xs text-text-secondary">Personal de Cocina</p>
+          </div>
+
+          <!-- Botón de logout -->
+          <button 
+            id="logout-btn"
+            class="bg-surface border border-white/20 text-text-primary hover:bg-white/5 p-2 rounded-lg transition-colors"
+            title="Cerrar sesión"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="flex-1 p-6 h-[calc(100vh-80px)]">
+      <slot />
+    </main>
+
+    <!-- Toast de notificaciones globales -->
+    <div id="toast-container" class="fixed top-4 right-4 space-y-2 z-50 pointer-events-none">
+      <!-- Las notificaciones aparecerán aquí -->
+    </div>
+
+    <!-- Scripts globales -->
+    <script>
+      // Configurar información del usuario
+      const userInfo = localStorage.getItem('user_info');
+      if (userInfo) {
+        try {
+          const user = JSON.parse(userInfo);
+          const userNameElement = document.getElementById('user-name');
+          if (userNameElement && user.fullName) {
+            userNameElement.textContent = user.fullName;
+          }
+        } catch (error) {
+          console.error('Error parsing user info:', error);
+        }
+      }
+
+      // Configurar logout
+      document.getElementById('logout-btn')?.addEventListener('click', () => {
+        // Confirmar logout
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+          // Limpiar datos locales
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_info');
+          sessionStorage.clear();
+          
+          // Redirigir al login
+          window.location.href = '/login';
+        }
+      });
+
+      // Detectar si el usuario no es de cocina y redirigir
+      const userInfo2 = localStorage.getItem('user_info');
+      if (userInfo2) {
+        try {
+          const user = JSON.parse(userInfo2);
+          if (user.role && user.role !== 'Kitchen') {
+            // Si no es usuario de cocina, redirigir al admin
+            window.location.href = '/admin';
+          }
+        } catch (error) {
+          console.error('Error validating user role:', error);
+        }
+      }
+    </script>
+
+    <!-- Cargar estilos globales -->
+    <style is:global>
+      @import "../styles/global.css";
+    </style>
+  </body>
+</html>

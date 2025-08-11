@@ -122,6 +122,38 @@ const isActive = (href: string) => {
       >
     </a>
     <a
+      href="/admin/kitchen"
+      title="Vista de Cocina"
+      class:list={[
+        "flex items-center gap-x-4 px-2 py-2 rounded-md transition-colors font-medium",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        {
+          "bg-accent text-white font-semibold shadow-md":
+            isActive("/admin/kitchen"),
+        },
+        { "hover:bg-accent/10 hover:text-accent": !isActive("/admin/kitchen") },
+      ]}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-6 h-6 flex-shrink-0"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path>
+      </svg>
+      <span
+        class="sidebar-text transition-opacity duration-300 whitespace-nowrap"
+        >Vista de Cocina</span
+      >
+    </a>
+    <a
       href="/admin/users"
       title="Usuarios"
       class:list={[

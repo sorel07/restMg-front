@@ -151,14 +151,14 @@ class TablesPageManager {
         <div class="flex gap-2">
           <button 
             onclick="tablesManager.editTable('${table.id}')"
-            class="flex-1 bg-surface text-text-primary px-3 py-2 rounded text-sm hover:bg-white/10 transition-colors"
+            class="flex-1 bg-surface text-text-primary cursor-pointer px-3 py-2 rounded text-sm hover:bg-white/10 transition-colors"
           >
             Editar
           </button>
           <button 
             data-table-id="${table.id}"
             data-table-code="${table.code}"
-            class="qr-button flex-1 bg-accent text-white px-3 py-2 rounded text-sm hover:bg-opacity-80 transition-colors"
+            class="qr-button flex-1 bg-accent text-white cursor-pointer px-3 py-2 rounded text-sm hover:bg-opacity-80 transition-colors"
           >
             Generar QR
           </button>

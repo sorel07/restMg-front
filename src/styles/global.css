@@ -13,6 +13,55 @@
   --color-text-primary: #ffffff;
   --color-text-secondary: #a3a3a3;
 
+  /* -- Colores Estándar de Tailwind -- */
+  /* Gray */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Red */
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+
+  /* Yellow/Amber */
+  --color-yellow-400: #fbbf24;
+  --color-yellow-500: #f59e0b;
+  --color-yellow-600: #d97706;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+
+  /* Green */
+  --color-green-400: #4ade80;
+  --color-green-500: #10b981;
+  --color-green-600: #059669;
+
+  /* Blue */
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+
+  /* Purple */
+  --color-purple-500: #8b5cf6;
+  --color-purple-600: #7c3aed;
+
+  /* Pink */
+  --color-pink-500: #ec4899;
+
+  /* Indigo */
+  --color-indigo-500: #6366f1;
+
+  /* Orange */
+  --color-orange-400: #fb923c;
+  --color-orange-600: #ea580c;
+
   /* -- Definición de Fuentes -- */
   --font-family-heading: "Poppins", sans-serif;
 }
