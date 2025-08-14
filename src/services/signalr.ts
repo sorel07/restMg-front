@@ -26,40 +26,28 @@ class SignalRService {
   private eventHandlers: SignalREventHandlers = {};
 
   /**
-   * Obtener la URL base del API según el entorno
+   * Obtener la URL base del Hub de SignalR
    */
-  private getApiBaseUrl(): string {
-    let apiUrl: string;
+  private getHubBaseUrl(): string {
+    // Usar la variable de entorno directamente (sin /api al final)
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://restmg.runasp.net/api';
+    const HUB_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
     
-    // En desarrollo, usar la variable de entorno o localhost
-    if (import.meta.env.DEV) {
-      apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:5095/api';
-      console.log('🔧 SignalR: Entorno de desarrollo detectado');
-    } else {
-      // En producción, usar HTTP directo (no HTTPS) para evitar Mixed Content
-      // Nota: SignalR WebSockets desde HTTPS puede conectar a WS (no WSS) en algunos navegadores
-      apiUrl = 'http://restmg.runasp.net/api';
-      console.log('🚀 SignalR: Entorno de producción detectado (HTTP para evitar Mixed Content)');
-    }
-    
-    console.log('🌐 SignalR: API Base URL configurada:', apiUrl);
-    return apiUrl;
+    console.log('🌐 SignalR: Hub Base URL configurada:', HUB_BASE_URL);
+    return HUB_BASE_URL;
   }
 
   /**
    * Construir la URL absoluta del Hub de SignalR
    */
   private buildHubUrl(hubPath: string = 'kitchenHub'): string {
-    // Obtener la URL base del backend
-    const apiBaseUrl = this.getApiBaseUrl(); // ej: http://localhost:5095/api
-    
-    // Remover '/api' del final si existe para obtener la URL del servidor
-    const serverBaseUrl = apiBaseUrl.replace(/\/api$/, ''); // ej: http://localhost:5095
+    // Obtener la URL base del servidor (sin /api)
+    const hubBaseUrl = this.getHubBaseUrl(); // ej: https://localhost:7140
     
     // Construir la URL completa del Hub
-    const hubUrl = `${serverBaseUrl}/${hubPath}`; // ej: http://localhost:5095/kitchenHub
+    const hubUrl = `${hubBaseUrl}/${hubPath}`; // ej: https://localhost:7140/kitchenHub
     
-    console.log('🌐 URL del Hub construida:', hubUrl);
+    console.log('🌐 SignalR: URL del Hub construida:', hubUrl);
     
     return hubUrl;
   }

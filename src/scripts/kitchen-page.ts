@@ -1,4 +1,4 @@
-import { apiClient } from '../services/api';
+import { apiClient, confirmOrderPayment, getPendingPaymentOrders } from '../services/api';
 import AudioNotificationManager from '../services/audio-notifications';
 import notificationManager from '../services/notifications';
 import orderHistoryService from '../services/order-history';
@@ -11,6 +11,13 @@ import type {
     OrderStatusUpdatePayload,
     SignalRConnection
 } from '../types/kitchen';
+import type { PendingPaymentOrder } from '../types/payment';
+
+// Enum local para las pestañas
+enum KitchenTab {
+  ACTIVE_ORDERS = 'active-orders',
+  PENDING_PAYMENTS = 'pending-payments'
+}
 
 class KitchenPageManager {
   private signalRConnection: any = null;
@@ -19,6 +26,8 @@ class KitchenPageManager {
     reconnectAttempts: 0
   };
   private orders: Map<string, KitchenOrder> = new Map();
+  private pendingPayments: Map<string, PendingPaymentOrder> = new Map();
+  private currentTab: KitchenTab = KitchenTab.ACTIVE_ORDERS;
   private reconnectInterval: NodeJS.Timeout | null = null;
   private timeUpdateInterval: NodeJS.Timeout | null = null;
   private audioManager: AudioNotificationManager;
@@ -35,8 +44,14 @@ class KitchenPageManager {
     // Configurar event listeners
     this.setupEventListeners();
     
+    // Configurar navegación por pestañas
+    this.setupTabNavigation();
+    
     // Cargar pedidos iniciales
     await this.loadInitialOrders();
+    
+    // Cargar pagos pendientes
+    await this.loadPendingPayments();
     
     // Cargar estadísticas del día
     await this.loadTodayStatistics();
@@ -95,6 +110,330 @@ class KitchenPageManager {
 
     // Configurar audio inicial
     this.updateAudioButtonState();
+  }
+
+  private setupTabNavigation(): void {
+    console.log('📑 Configurando navegación por pestañas...');
+    
+    // Event listeners para las pestañas
+    const activeOrdersTab = document.getElementById('active-orders-tab');
+    const pendingPaymentsTab = document.getElementById('pending-payments-tab');
+    
+    if (activeOrdersTab) {
+      activeOrdersTab.addEventListener('click', () => this.switchTab(KitchenTab.ACTIVE_ORDERS));
+    }
+    
+    if (pendingPaymentsTab) {
+      pendingPaymentsTab.addEventListener('click', () => this.switchTab(KitchenTab.PENDING_PAYMENTS));
+    }
+
+    // Event listener para refresh de pagos pendientes
+    const refreshPaymentsBtn = document.getElementById('refresh-payments-btn');
+    if (refreshPaymentsBtn) {
+      refreshPaymentsBtn.addEventListener('click', () => this.refreshPendingPayments());
+    }
+
+    // Event delegation para botones de confirmar pago
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const confirmBtn = target.closest('[data-confirm-payment]') as HTMLElement;
+      
+      if (confirmBtn) {
+        const orderId = confirmBtn.dataset.confirmPayment;
+        if (orderId) {
+          this.confirmPayment(orderId);
+        }
+      }
+    });
+  }
+
+  private switchTab(tab: KitchenTab): void {
+    console.log(`🔄 Cambiando a pestaña: ${tab}`);
+    
+    this.currentTab = tab;
+    
+    // Actualizar estado visual de las pestañas
+    const allTabs = document.querySelectorAll('.kitchen-tab');
+    const allContents = document.querySelectorAll('.tab-content');
+    
+    allTabs.forEach(tabElement => {
+      tabElement.classList.remove('active', 'bg-accent', 'text-white');
+      tabElement.classList.add('text-text-secondary');
+    });
+    
+    allContents.forEach(content => {
+      content.classList.add('hidden');
+    });
+    
+    // Activar pestaña actual
+    const activeTab = document.getElementById(`${tab}-tab`);
+    const activeContent = document.getElementById(`${tab}-content`);
+    
+    if (activeTab) {
+      activeTab.classList.add('active', 'bg-accent', 'text-white');
+      activeTab.classList.remove('text-text-secondary');
+    }
+    
+    if (activeContent) {
+      activeContent.classList.remove('hidden');
+    }
+
+    // Actualizar badges
+    this.updateTabBadges();
+  }
+
+  private updateTabBadges(): void {
+    const activeOrdersBadge = document.getElementById('active-orders-badge');
+    const pendingPaymentsBadge = document.getElementById('pending-payments-badge');
+    
+    if (activeOrdersBadge) {
+      const totalActiveOrders = this.orders.size;
+      activeOrdersBadge.textContent = totalActiveOrders.toString();
+    }
+    
+    if (pendingPaymentsBadge) {
+      pendingPaymentsBadge.textContent = this.pendingPayments.size.toString();
+    }
+  }
+
+  private async loadPendingPayments(): Promise<void> {
+    console.log('💰 Cargando pagos pendientes...');
+    
+    try {
+      const payments = await getPendingPaymentOrders();
+      
+      // Limpiar pagos existentes
+      this.pendingPayments.clear();
+      
+      // Procesar cada pago
+      payments.forEach(payment => {
+        this.pendingPayments.set(payment.id, payment);
+      });
+      
+      // Renderizar lista de pagos
+      this.renderPendingPaymentsList();
+      this.updateTabBadges();
+      
+      console.log(`✅ ${payments.length} pagos pendientes cargados`);
+      
+    } catch (error) {
+      console.error('❌ Error cargando pagos pendientes:', error);
+      notificationManager.show('Error al cargar los pagos pendientes', 'error');
+      this.showPaymentsErrorState();
+    }
+  }
+
+  private async refreshPendingPayments(): Promise<void> {
+    console.log('🔄 Refrescando pagos pendientes...');
+    
+    const refreshBtn = document.getElementById('refresh-payments-btn');
+    if (refreshBtn) {
+      refreshBtn.classList.add('animate-spin');
+    }
+    
+    await this.loadPendingPayments();
+    
+    if (refreshBtn) {
+      setTimeout(() => {
+        refreshBtn.classList.remove('animate-spin');
+      }, 500);
+    }
+  }
+
+  private async confirmPayment(orderId: string): Promise<void> {
+    console.log(`💳 Confirmando pago para pedido: ${orderId}`);
+    
+    const payment = this.pendingPayments.get(orderId);
+    if (!payment) {
+      console.error('❌ Pago no encontrado:', orderId);
+      return;
+    }
+
+    // Buscar el botón y mostrar loading
+    const confirmBtn = document.querySelector(`[data-confirm-payment="${orderId}"]`) as HTMLButtonElement;
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+          <span>Procesando...</span>
+        </div>
+      `;
+    }
+
+    try {
+      await confirmOrderPayment(orderId);
+      
+      // Remover de la lista de pagos pendientes
+      this.pendingPayments.delete(orderId);
+      
+      // Animar la remoción del elemento
+      const paymentItem = document.querySelector(`[data-payment-item="${orderId}"]`);
+      if (paymentItem) {
+        paymentItem.classList.add('payment-item-removing');
+        setTimeout(() => {
+          paymentItem.remove();
+          this.renderPendingPaymentsList(); // Re-renderizar para mostrar estado vacío si es necesario
+        }, 300);
+      }
+
+      // Actualizar badges
+      this.updateTabBadges();
+      
+      // Mostrar notificación de éxito
+      notificationManager.show(`Pago confirmado para pedido #${payment.orderCode}`, 'success');
+      
+      console.log(`✅ Pago confirmado exitosamente: ${payment.orderCode}`);
+      
+    } catch (error) {
+      console.error('❌ Error confirmando pago:', error);
+      notificationManager.show('Error al confirmar el pago', 'error');
+      
+      // Restaurar botón
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Confirmar Pago</span>
+          </div>
+        `;
+      }
+    }
+  }
+
+  private renderPendingPaymentsList(): void {
+    const loadingDiv = document.getElementById('payments-loading');
+    const listDiv = document.getElementById('pending-payments-list');
+    const emptyDiv = document.getElementById('payments-empty');
+    
+    if (!listDiv || !emptyDiv || !loadingDiv) return;
+
+    // Ocultar loading
+    loadingDiv.classList.add('hidden');
+
+    if (this.pendingPayments.size === 0) {
+      // Mostrar estado vacío
+      listDiv.classList.add('hidden');
+      emptyDiv.classList.remove('hidden');
+    } else {
+      // Mostrar lista
+      emptyDiv.classList.add('hidden');
+      listDiv.classList.remove('hidden');
+      
+      // Generar HTML para cada pago
+      const paymentsArray = Array.from(this.pendingPayments.values());
+      listDiv.innerHTML = paymentsArray.map(payment => this.renderPaymentItem(payment)).join('');
+    }
+  }
+
+  private renderPaymentItem(payment: PendingPaymentOrder): string {
+    const createdDate = new Date(payment.createdAt);
+    const timeAgo = this.getTimeAgo(payment.createdAt);
+    const formattedTime = createdDate.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+
+    const totalItems = payment.items.reduce((sum, item) => sum + item.quantity, 0);
+    const total = payment.total ?? payment.items.reduce((sum, item) => 
+      sum + (item.quantity * (item.unitPrice ?? 0)), 0
+    );
+
+    return `
+      <div class="bg-background rounded-xl p-6 border border-yellow-600/20 hover:border-yellow-600/40 transition-colors" data-payment-item="${payment.id}">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <!-- Header del pedido -->
+            <div class="flex items-center space-x-4 mb-3">
+              <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                <h3 class="font-heading text-xl font-bold text-text-primary">#${payment.orderCode}</h3>
+              </div>
+              <div class="text-text-secondary text-sm bg-yellow-600/10 px-2 py-1 rounded-full">
+                ${payment.tableCode}
+              </div>
+            </div>
+
+            <!-- Información del pedido -->
+            <div class="grid grid-cols-3 gap-4 mb-4 text-sm">
+              <div>
+                <p class="text-text-secondary">Total a Pagar</p>
+                <p class="text-text-primary font-semibold text-lg">$${total.toFixed(2)}</p>
+              </div>
+              <div>
+                <p class="text-text-secondary">Items</p>
+                <p class="text-text-primary font-semibold">${totalItems} productos</p>
+              </div>
+              <div>
+                <p class="text-text-secondary">Hora</p>
+                <p class="text-text-primary font-semibold">${formattedTime}</p>
+                <p class="text-text-secondary text-xs">${timeAgo}</p>
+              </div>
+            </div>
+
+            <!-- Detalle de items -->
+            <div class="space-y-1 text-sm">
+              ${payment.items.slice(0, 3).map(item => `
+                <div class="flex justify-between text-text-secondary">
+                  <span>${item.quantity}x ${item.name}</span>
+                  <span>$${((item.unitPrice ?? 0) * item.quantity).toFixed(2)}</span>
+                </div>
+              `).join('')}
+              ${payment.items.length > 3 ? `
+                <div class="text-text-secondary text-xs">
+                  +${payment.items.length - 3} productos más...
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Botón de acción -->
+          <div class="ml-6">
+            <button 
+              data-confirm-payment="${payment.id}"
+              class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors flex items-center space-x-2 min-w-[140px] justify-center"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Confirmar Pago</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private showPaymentsErrorState(): void {
+    const loadingDiv = document.getElementById('payments-loading');
+    const listDiv = document.getElementById('pending-payments-list');
+    const emptyDiv = document.getElementById('payments-empty');
+    
+    if (loadingDiv) loadingDiv.classList.add('hidden');
+    if (listDiv) listDiv.classList.add('hidden');
+    if (emptyDiv) {
+      emptyDiv.classList.remove('hidden');
+      emptyDiv.innerHTML = `
+        <div class="text-center py-20">
+          <div class="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-text-primary mb-2">Error al cargar pagos</h3>
+          <p class="text-text-secondary mb-4">No se pudieron cargar los pagos pendientes</p>
+          <button 
+            onclick="location.reload()" 
+            class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      `;
+    }
   }
 
   private async loadInitialOrders(): Promise<void> {

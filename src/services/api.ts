@@ -11,27 +11,13 @@ import type {
 } from "../types/restaurant";
 import type { CreateUserData, UpdateUserData, User } from "../types/user";
 
-// Configuración de URLs por entorno
-const getApiBaseUrl = (): string => {
-  let apiUrl: string;
-  
-  // En desarrollo, usar la variable de entorno o localhost
-  if (import.meta.env.DEV) {
-    apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:5095/api';
-    console.log('🔧 Entorno de desarrollo detectado');
-  } else {
-    // En producción, usar proxy interno para evitar Mixed Content
-    // El proxy se encarga de hacer la petición HTTP al backend
-    apiUrl = '/api-proxy';
-    console.log('🚀 Entorno de producción detectado - usando proxy');
-  }
-  
-  console.log('🌐 API Base URL configurada:', apiUrl);
-  return apiUrl;
-};
+// Configuración simplificada de la API
+const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://restmg.runasp.net/api';
+
+console.log('🌐 API Base URL configurada:', API_BASE_URL);
 
 const apiClient = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -273,6 +259,46 @@ export async function getMenuBySubdomain(
     console.error("Error al obtener el menú por subdominio:", error);
     throw error;
   }
+}
+
+// ========== FUNCIONES DEL CARRITO Y PEDIDOS ==========
+
+/**
+ * Crear pedido desde el carrito (público, sin token)
+ */
+export async function createOrder(orderData: {
+  restaurantId: string;
+  tableId: string;
+  items: { menuItemId: string; quantity: number }[];
+}): Promise<{ orderId: string; orderCode: string }> {
+  const response = await apiClient.post('/orders', orderData);
+  return response.data;
+}
+
+/**
+ * Obtener detalles del pedido por código (público, sin token)
+ */
+export async function getOrderByCode(
+  code: string,
+  restaurantId: string
+): Promise<any> {
+  const response = await apiClient.get(`/orders/${code}?restaurantId=${restaurantId}`);
+  return response.data;
+}
+
+/**
+ * Obtener pedidos pendientes de pago (requiere token de admin/kitchen)
+ */
+export async function getPendingPaymentOrders(): Promise<any[]> {
+  const response = await apiClient.get('/kitchen/orders?status=AwaitingPayment');
+  return response.data;
+}
+
+/**
+ * Confirmar pago de un pedido (requiere token de admin/kitchen)
+ */
+export async function confirmOrderPayment(orderId: string): Promise<void> {
+  await apiClient.put(`/kitchen/orders/${orderId}/confirm-payment`);
 }
 
 // Exportar la instancia del cliente API para uso directo

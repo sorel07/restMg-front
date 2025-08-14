@@ -4,9 +4,11 @@ export interface Props {
   name: string;
   description: string;
   price: number;
+  showAddButton?: boolean;
+  menuItemId?: string;
 }
 
-const { imageUrl, name, description, price } = Astro.props;
+const { imageUrl, name, description, price, showAddButton = false, menuItemId } = Astro.props;
 ---
 
 <div
@@ -16,6 +18,7 @@ const { imageUrl, name, description, price } = Astro.props;
     src={imageUrl}
     alt={`Imagen de ${name}`}
     class="w-full h-48 object-cover"
+    loading="lazy"
   />
 
   <div class="p-4 flex flex-col flex-grow">
@@ -25,7 +28,7 @@ const { imageUrl, name, description, price } = Astro.props;
       {name}
     </h3>
 
-    <p class="text-text-secondary text-sm mb-4 flex-grow min-h-[40px]">
+    <p class="text-text-secondary text-sm mb-4 flex-grow min-h-[40px] line-clamp-3">
       {description}
     </p>
 
@@ -35,11 +38,35 @@ const { imageUrl, name, description, price } = Astro.props;
       <span class="font-heading font-bold text-lg text-accent">
         ${price.toFixed(2)}
       </span>
-      <button
-        class="bg-accent text-white font-heading font-semibold text-sm py-2 px-4 rounded-full hover:bg-opacity-80 transition-colors"
-      >
-        Añadir
-      </button>
+      
+      {showAddButton && menuItemId ? (
+        <button
+          data-add-to-cart={menuItemId}
+          class="bg-accent hover:bg-accent/90 text-white font-heading font-semibold text-sm py-2 px-4 rounded-full transition-all duration-200 flex items-center space-x-2 hover:shadow-lg active:scale-95"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          <span>Añadir</span>
+        </button>
+      ) : (
+        <button
+          class="bg-accent text-white font-heading font-semibold text-sm py-2 px-4 rounded-full hover:bg-opacity-80 transition-colors cursor-not-allowed opacity-50"
+          disabled
+        >
+          Ver Menú
+        </button>
+      )}
     </div>
   </div>
 </div>
+
+<style>
+  /* Utility para truncar texto a 3 líneas */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
