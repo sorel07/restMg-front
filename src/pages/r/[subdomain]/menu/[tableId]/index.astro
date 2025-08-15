@@ -2,27 +2,33 @@
 import CartModal from "../../../../../components/CartModal.astro";
 import MenuItemCard from "../../../../../components/MenuItemCard.astro";
 import Layout from "../../../../../layouts/Layout.astro";
-import { getMenuBySubdomain } from "../../../../../services/api";
+import { getMenuBySubdomain, getTables } from "../../../../../services/api";
 import type { MenuCategory } from "../../../../../types/menu";
 
 // Astro nos da los parámetros de la ruta directamente
-const { subdomain, tableCode } = Astro.params;
+const { subdomain, tableId } = Astro.params;
 
 let menuCategories: MenuCategory[] = [];
 let error: string | null = null;
 let restaurantId: string = '';
+let tableCode: string = '';
 
 if (!subdomain) {
   error = "Restaurante no encontrado. La URL es incorrecta.";
 } else {
   try {
-    // Usamos el nuevo endpoint que busca por subdominio
     menuCategories = await getMenuBySubdomain(subdomain);
-    
-    // TODO: Obtener restaurantId y tableId reales del backend
-    // Por ahora usamos valores placeholder
-    restaurantId = 'placeholder-restaurant-id';
-    
+
+    // Extraer restaurantId y tableId si existen en la respuesta
+    if (menuCategories.length > 0) {
+        restaurantId = menuCategories[0].id || subdomain || '';
+    } else {
+      restaurantId = subdomain || '';
+    }
+  // Obtener el código legible de la mesa usando el GUID
+  const tables = await getTables();
+  const foundTable = tables.find(t => t.id === tableId);
+  tableCode = foundTable ? foundTable.code : '';
   } catch (e) {
     error = "No se pudo cargar el menú para este restaurante.";
   }
@@ -30,10 +36,10 @@ if (!subdomain) {
 
 // Preparar datos del menú para el script del carrito
 const menuData = {
-  subdomain,
   restaurantId,
-  tableId: 'placeholder-table-id', // TODO: obtener del backend
-  tableCode
+  tableId, // GUID real desde la URL
+  tableCode, // Código legible para mostrar
+  items: menuCategories.flatMap(cat => cat.items?.filter(item => item.isAvailable).map(item => ({ menuItemId: item.id, quantity: 1 })) || [])
 };
 ---
 
