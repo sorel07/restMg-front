@@ -245,7 +245,6 @@ class DashboardPageManager {
               <p class="text-xs text-text-secondary">
                 Estado: <span class="${this.getStatusTextColor(table.status)}">${this.getStatusText(table.status)}</span>
               </p>
-              <p class="text-xs text-text-secondary mt-1">Capacidad: ${table.seats || 4} personas</p>
             </div>
 
             <!-- Actions -->
