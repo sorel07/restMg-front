@@ -11,9 +11,7 @@ export default defineConfig({
   output: "server",
 
   // Adaptador: Le dice a Astro cómo construir para Vercel.
-  adapter: vercel({
-    webAnalytics: { enabled: true }, // Habilita las analíticas web de Vercel
-  }),
+  adapter: vercel(),
 
   // URL del Sitio: Sigue siendo importante para generar sitemaps, etc.
   site: "https://restmg.vercel.app",

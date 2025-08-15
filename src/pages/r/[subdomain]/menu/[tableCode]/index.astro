@@ -63,7 +63,7 @@ const menuData = {
               </h2>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {category.items
-                  .filter(item => item.isAvailable && item.isActive)
+                  .filter(item => item.isAvailable)
                   .map((item) => (
                   <div data-menu-item={JSON.stringify(item)}>
                     <MenuItemCard
