@@ -1,4 +1,6 @@
 ---
+import { formatCOP } from "../scripts/utils/formatting";
+
 export interface Props {
   imageUrl: string;
   name: string;
@@ -6,9 +8,18 @@ export interface Props {
   price: number;
   showAddButton?: boolean;
   menuItemId?: string;
+  brandingColor?: string;
 }
 
-const { imageUrl, name, description, price, showAddButton = false, menuItemId } = Astro.props;
+const {
+  imageUrl,
+  name,
+  description,
+  price,
+  showAddButton = false,
+  menuItemId,
+  brandingColor = "#FF5733",
+} = Astro.props;
 ---
 
 <div
@@ -28,24 +39,39 @@ const { imageUrl, name, description, price, showAddButton = false, menuItemId } 
       {name}
     </h3>
 
-    <p class="text-text-secondary text-sm mb-4 flex-grow min-h-[40px] line-clamp-3">
+    <p
+      class="text-text-secondary text-sm mb-4 flex-grow min-h-[40px] line-clamp-3"
+    >
       {description}
     </p>
 
     <div
       class="flex justify-between items-center mt-auto pt-4 border-t border-white/5"
     >
-      <span class="font-heading font-bold text-lg text-accent">
-        ${price.toFixed(2)}
+      <span
+        class="font-heading font-bold text-lg"
+        style={{ color: brandingColor }}
+      >
+        ${formatCOP(price)}
       </span>
-      
+
       {showAddButton && menuItemId ? (
         <button
           data-add-to-cart={menuItemId}
-          class="bg-accent hover:bg-accent/90 text-white font-heading font-semibold text-sm py-2 px-4 rounded-full transition-all duration-200 flex items-center space-x-2 hover:shadow-lg active:scale-95"
+          class="text-white font-heading font-semibold text-sm py-2 px-4 rounded-full transition-all duration-200 flex items-center space-x-2 hover:shadow-lg active:scale-95"
+          style={{ backgroundColor: brandingColor, opacity: 0.9 }}
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>
           <span>Añadir</span>
         </button>

@@ -1,4 +1,6 @@
 ---
+import ConfirmationModal from '../components/ConfirmationModal.astro';
+
 export interface Props {
   title: string;
 }
@@ -66,52 +68,16 @@ const { title } = Astro.props;
 
     <!-- Scripts globales -->
     <script>
-      // Configurar información del usuario
-      const userInfo = localStorage.getItem('user_info');
-      if (userInfo) {
-        try {
-          const user = JSON.parse(userInfo);
-          const userNameElement = document.getElementById('user-name');
-          if (userNameElement && user.fullName) {
-            userNameElement.textContent = user.fullName;
-          }
-        } catch (error) {
-          console.error('Error parsing user info:', error);
-        }
-      }
-
-      // Configurar logout
-      document.getElementById('logout-btn')?.addEventListener('click', () => {
-        // Confirmar logout
-        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-          // Limpiar datos locales
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user_info');
-          sessionStorage.clear();
-          
-          // Redirigir al login
-          window.location.href = '/login';
-        }
-      });
-
-      // Detectar si el usuario no es de cocina y redirigir
-      const userInfo2 = localStorage.getItem('user_info');
-      if (userInfo2) {
-        try {
-          const user = JSON.parse(userInfo2);
-          if (user.role && user.role !== 'Kitchen') {
-            // Si no es usuario de cocina, redirigir al admin
-            window.location.href = '/admin';
-          }
-        } catch (error) {
-          console.error('Error validating user role:', error);
-        }
-      }
+      import { checkRouteAccess } from "../scripts/route-guard.ts";
+      import "../scripts/logout-handler.ts";
+      checkRouteAccess();
     </script>
 
     <!-- Cargar estilos globales -->
     <style is:global>
       @import "../styles/global.css";
     </style>
+
+    <ConfirmationModal id="logout-confirmation-modal" />
   </body>
 </html>

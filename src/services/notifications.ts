@@ -4,7 +4,9 @@ class NotificationManager {
   private notificationId = 0;
 
   constructor() {
-    this.initializeContainer();
+    if (typeof window !== 'undefined') {
+      this.initializeContainer();
+    }
   }
 
   private initializeContainer() {
@@ -12,9 +14,21 @@ class NotificationManager {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
         this.container = document.getElementById('notifications-container');
+        if (!this.container) {
+            this.container = document.createElement('div');
+            this.container.id = 'notifications-container';
+            this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
+            document.body.appendChild(this.container);
+        }
       });
     } else {
       this.container = document.getElementById('notifications-container');
+      if (!this.container) {
+        this.container = document.createElement('div');
+        this.container.id = 'notifications-container';
+        this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
+        document.body.appendChild(this.container);
+      }
     }
   }
 
@@ -22,8 +36,11 @@ class NotificationManager {
     if (!this.container) {
       this.container = document.getElementById('notifications-container');
       if (!this.container) {
-        console.warn('Notifications container not found');
-        return;
+        console.warn('Notifications container not found, creating one.');
+        this.container = document.createElement('div');
+        this.container.id = 'notifications-container';
+        this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
+        document.body.appendChild(this.container);
       }
     }
 
@@ -97,8 +114,8 @@ class NotificationManager {
             ${message}
           </p>
         </div>
-        <button 
-          type="button" 
+        <button
+          type="button"
           onclick="window.notificationManager.remove('${id}')"
           class="flex-shrink-0 ml-2 p-1 rounded-md hover:bg-white/10 transition-colors text-text-secondary hover:text-text-primary"
         >
@@ -162,11 +179,27 @@ class NotificationManager {
   }
 }
 
-// Crear instancia global
-const notificationManager = new NotificationManager();
+let instance: NotificationManager | null = null;
 
-// Exponer globalmente
-(window as any).notificationManager = notificationManager;
+function getNotificationManager(): NotificationManager {
+  if (typeof window !== 'undefined') {
+    if (!instance) {
+      instance = new NotificationManager();
+      (window as any).notificationManager = instance;
+    }
+    return instance;
+  }
+  // Devuelve un objeto mock para el renderizado del lado del servidor
+  return {
+    show: () => {},
+    success: () => {},
+    error: () => {},
+    warning: () => {},
+    info: () => {},
+    remove: () => {},
+  } as any;
+}
 
-// Exportar para uso en módulos
+const notificationManager = getNotificationManager();
+
 export default notificationManager;

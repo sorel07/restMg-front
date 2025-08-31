@@ -8,6 +8,7 @@ import type {
     MenuItem,
     UpdateMenuItemRequest
 } from '../types/menu';
+import { handleFormSubmit } from './utils/form-handler';
 
 class MenuPageManager {
   private categories: MenuCategory[] = [];
@@ -675,28 +676,21 @@ class MenuPageManager {
   private async handleCategorySubmit(e: Event) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-    
-    const categoryData: CreateCategoryRequest = {
-      name: formData.get('name') as string,
-      displayOrder: parseInt(formData.get('displayOrder') as string)
-    };
 
-    try {
-      if (this.currentEditingCategory) {
-        await apiClient.put(`/menu/categories/${this.currentEditingCategory.id}`, categoryData);
-        notificationManager.success('Categoría actualizada correctamente');
-      } else {
-        await apiClient.post('/menu/categories', categoryData);
-        notificationManager.success('Categoría creada correctamente');
-      }
-
-      this.closeCategoryModal();
-      await this.loadMenu();
-    } catch (error) {
-      console.error('Error saving category:', error);
-      notificationManager.error('Error al guardar la categoría. Por favor, intenta nuevamente.');
-    }
+    handleFormSubmit({
+      form,
+      apiCall: (data) => {
+        if (this.currentEditingCategory) {
+          return apiClient.put(`/menu/categories/${this.currentEditingCategory.id}`, data);
+        }
+        return apiClient.post('/menu/categories', data);
+      },
+      onSuccess: () => {
+        this.closeCategoryModal();
+        this.loadMenu();
+        notificationManager.success(`Categoría ${this.currentEditingCategory ? 'actualizada' : 'creada'} con éxito.`);
+      },
+    });
   }
 
   // Modal Management - Item
@@ -772,140 +766,46 @@ class MenuPageManager {
 
   private async handleItemSubmit(e: Event) {
     e.preventDefault();
-    
-    if (this.isUploading) {
-      return; // Prevenir múltiples envíos
-    }
-
     const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-    
-    // Validar que se haya seleccionado una categoría
-    const categoryId = formData.get('categoryId') as string;
-    if (!categoryId || categoryId.trim() === '') {
-      notificationManager.error('Por favor selecciona una categoría');
-      return;
-    }
-    
-    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-    const originalButtonText = submitButton?.textContent || 'Guardar';
 
-    try {
-      this.isUploading = true;
-      
-      // Deshabilitar botón y mostrar estado de carga
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.innerHTML = `
-          <div class="flex items-center gap-2">
-            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Procesando...</span>
-          </div>
-        `;
-      }
-
-      let imageUrl = '';
-
-      // PASO 1: Subir imagen si hay archivo seleccionado
-      if (this.selectedImageFile) {
-        try {
-          // Mostrar progreso de subida
-          const progressInterval = this.showUploadProgress();
-          
-          // Actualizar estado del botón para subida de imagen
-          if (submitButton) {
-            submitButton.innerHTML = `
-              <div class="flex items-center gap-2">
-                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Subiendo imagen...</span>
-              </div>
-            `;
-          }
-
+    handleFormSubmit({
+      form,
+      apiCall: async (data) => {
+        let imageUrl = data.imageUrl;
+        if (this.selectedImageFile) {
           const uploadResult = await uploadImage(this.selectedImageFile);
           imageUrl = uploadResult.url;
-          
-          // Ocultar progreso y limpiar interval
-          if (progressInterval) {
-            clearInterval(progressInterval);
-          }
-          this.hideUploadProgress();
-          
-          notificationManager.success('Imagen subida exitosamente');
-        } catch (error) {
-          console.error('Error uploading image:', error);
-          this.hideUploadProgress();
-          notificationManager.error('Error al subir la imagen. Intenta nuevamente.');
-          throw error;
         }
-      } else {
-        // Usar URL externa si no hay archivo
-        const urlInput = document.getElementById('item-image-url') as HTMLInputElement;
-        imageUrl = urlInput?.value?.trim() || '';
-      }
+        
+        const itemData = { ...data, imageUrl };
 
-      // PASO 2: Crear/actualizar el plato con la URL de imagen
-      if (submitButton) {
-        submitButton.innerHTML = `
-          <div class="flex items-center gap-2">
-            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Guardando plato...</span>
-          </div>
-        `;
-      }
-
-      const itemData: CreateMenuItemRequest | UpdateMenuItemRequest = {
+        if (this.currentEditingItem) {
+          return apiClient.put(`/menu/items/${this.currentEditingItem.id}`, itemData);
+        }
+        return apiClient.post('/menu/items', itemData);
+      },
+      onSuccess: () => {
+        this.closeItemModal();
+        this.loadMenu();
+        notificationManager.success(`Plato ${this.currentEditingItem ? 'actualizado' : 'creado'} con éxito.`);
+      },
+      getFormData: (formData) => ({
         categoryId: formData.get('categoryId') as string,
         name: formData.get('name') as string,
         description: formData.get('description') as string || "",
         price: parseFloat(formData.get('price') as string),
-        imageUrl: imageUrl || "",
-      };
-
-      // Para actualizaciones, agregar isAvailable
-      if (this.currentEditingItem) {
-        (itemData as UpdateMenuItemRequest).isAvailable = (formData.get('isAvailable') === 'on');
-      }
-
-      console.log('Enviando datos del formulario:', itemData);
-
-      try {
-        if (this.currentEditingItem) {
-          await apiClient.put(`/menu/items/${this.currentEditingItem.id}`, itemData);
-          notificationManager.success('Plato actualizado exitosamente');
-        } else {
-          await apiClient.post('/menu/items', itemData);
-          notificationManager.success('Plato creado exitosamente');
+        imageUrl: (formData.get('imageUrl') as string) || "",
+        isAvailable: formData.get('isAvailable') === 'on',
+      }),
+      customValidation: () => {
+        const categoryId = (form.elements.namedItem('categoryId') as HTMLSelectElement).value;
+        if (!categoryId) {
+          notificationManager.error('Por favor selecciona una categoría.');
+          return false;
         }
-
-        this.closeItemModal();
-        await this.loadMenu();
-      } catch (error) {
-        console.error('Error saving item:', error);
-        notificationManager.error('Error al guardar el plato. Por favor, intenta nuevamente.');
-        throw error;
-      }
-
-    } catch (error) {
-      console.error('Error in item submission:', error);
-    } finally {
-      this.isUploading = false;
-      
-      // Restaurar botón
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = originalButtonText;
-      }
-    }
+        return true;
+      },
+    });
   }
 
   // Public methods for template onclick handlers

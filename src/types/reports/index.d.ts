@@ -3,7 +3,7 @@ export interface OrderReport {
   orderCode: string;
   tableCode: string;
   total: number;
-  status: 'Pending' | 'InPreparation' | 'Ready' | 'Delivered' | 'Cancelled';
+  status: 'Pending' | 'InPreparation' | 'Ready' | 'Delivered' | 'Cancelled' | 'AwaitingPayment';
   createdAt: string;
 }
 

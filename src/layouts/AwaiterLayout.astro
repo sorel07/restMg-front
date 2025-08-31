@@ -1,0 +1,34 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | RestMg Awaiter</title>
+
+    
+  </head>
+  <body class="bg-background font-body text-text-primary antialiased">
+    <header class="bg-surface border-b border-white/10 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <h1 class="font-heading text-xl font-bold text-text-primary">RestMg Awaiter</h1>
+        <button id="logout-btn" class="bg-surface border border-white/20 text-text-primary hover:bg-white/5 p-2 rounded-lg transition-colors" title="Cerrar sesión">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+        </button>
+      </div>
+    </header>
+    <main class="p-4 sm:p-6 md:p-8">
+      <slot />
+    </main>
+    <script src="../scripts/logout-handler.ts"></script>
+  </body>
+</html>

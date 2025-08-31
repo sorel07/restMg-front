@@ -52,3 +52,8 @@ export interface CreateResponse {
 export interface ErrorResponse {
   message: string;
 }
+
+export interface MenuBySubdomainResponse {
+  restaurantId: string;
+  categories: MenuCategory[];
+}

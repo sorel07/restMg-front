@@ -75,7 +75,7 @@ export function getUserSession(): DecodedToken | null {
 
   try {
     // Decodificar el token para acceder a sus datos (payload)
-    const decoded: DecodedToken = jwtDecode(token);
+    const decoded: any = jwtDecode(token);
 
     // Opcional: Comprobar si el token ha expirado
     if (decoded.exp * 1000 < Date.now()) {
@@ -83,7 +83,14 @@ export function getUserSession(): DecodedToken | null {
       return null;
     }
 
-    return decoded;
+    // El backend usa un claim no estándar para el rol. Lo mapeamos al campo 'role'.
+    const roleClaim = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
+    return {
+      ...decoded,
+      role: roleClaim
+    };
+
   } catch (error) {
     console.error("Error al decodificar el token:", error);
     return null; // El token es inválido o malformado

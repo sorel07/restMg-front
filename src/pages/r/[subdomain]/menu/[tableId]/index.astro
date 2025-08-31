@@ -2,121 +2,162 @@
 import CartModal from "../../../../../components/CartModal.astro";
 import MenuItemCard from "../../../../../components/MenuItemCard.astro";
 import Layout from "../../../../../layouts/Layout.astro";
-import { getMenuBySubdomain, getTables } from "../../../../../services/api";
-import type { MenuCategory } from "../../../../../types/menu";
+import {
+  getMenuBySubdomain,
+  getTables,
+} from "../../../../../services/api";
+import type { MenuBySubdomainResponse, MenuCategory } from "../../../../../types/menu";
 
 // Astro nos da los parámetros de la ruta directamente
 const { subdomain, tableId } = Astro.params;
 
 let menuCategories: MenuCategory[] = [];
+let restaurantId: string | null = null;
 let error: string | null = null;
-let restaurantId: string = '';
-let tableCode: string = '';
+let tableCode: string = "";
+let brandingColor: string = "#FF5733"; // Color por defecto, ya que no podemos obtenerlo de la API por ahora
 
 if (!subdomain) {
   error = "Restaurante no encontrado. La URL es incorrecta.";
 } else {
   try {
-    menuCategories = await getMenuBySubdomain(subdomain);
-
-    // Extraer restaurantId y tableId si existen en la respuesta
-    if (menuCategories.length > 0) {
-        restaurantId = menuCategories[0].id || subdomain || '';
+    const menuResponse = await getMenuBySubdomain(subdomain);
+    if (menuResponse && menuResponse.restaurantId) {
+      restaurantId = menuResponse.restaurantId;
+      menuCategories = menuResponse.categories || [];
+      const tables = await getTables();
+      const foundTable = tables.find((t) => t.id === tableId);
+      tableCode = foundTable ? foundTable.code : "";
     } else {
-      restaurantId = subdomain || '';
+      throw new Error(
+        `Respuesta inválida del menú para el subdominio: ${subdomain}`
+      );
     }
-  // Obtener el código legible de la mesa usando el GUID
-  const tables = await getTables();
-  const foundTable = tables.find(t => t.id === tableId);
-  tableCode = foundTable ? foundTable.code : '';
   } catch (e) {
+    console.error("[SSR Menu Page] CATCH BLOCK: Error getting data:", e);
     error = "No se pudo cargar el menú para este restaurante.";
   }
 }
 
-// Preparar datos del menú para el script del carrito
 const menuData = {
-  restaurantId,
-  tableId, // GUID real desde la URL
-  tableCode, // Código legible para mostrar
-  items: menuCategories.flatMap(cat => cat.items?.filter(item => item.isAvailable).map(item => ({ menuItemId: item.id, quantity: 1 })) || [])
+  restaurantId: restaurantId,
+  tableId,
+  tableCode,
+  items:
+    menuCategories.flatMap(
+      (cat) =>
+        cat.items
+          ?.filter((item) => item.isAvailable)
+          .map((item) => ({ menuItemId: item.id, quantity: 1 })) || []
+    ) || [],
 };
+
+// Clases de Tailwind para las pestañas
+const tabBaseClasses = "px-4 py-3 font-semibold text-center whitespace-nowrap transition-colors duration-200 ease-in-out focus:outline-none";
+const tabInactiveClasses = "text-zinc-400 hover:text-white border-b-2 border-transparent";
+const tabActiveClasses = `text-[var(--branding-color)] border-b-2 border-[var(--branding-color)]`;
 ---
 
-<Layout title="Menú del Restaurante">
-  <!-- Datos para el script del carrito -->
-  <div data-menu-info={JSON.stringify(menuData)} style="display: none;"></div>
-  
-  <main class="container mx-auto p-4 sm:p-6 md:p-8 pb-24">
-    <header class="text-center mb-12">
-      <h1 class="font-heading text-4xl sm:text-5xl font-bold text-accent">
+<style define:vars={{ brandingColor }}>
+  :root {
+    --branding-color: var(--brandingColor);
+  }
+</style>
+
+<Layout title={"Menú del Restaurante"}>
+  <div data-menu-info={JSON.stringify(menuData)} class="hidden"></div>
+
+  <main class="container mx-auto pb-24">
+    <header class="text-center my-8 px-4">
+      <h1 class="font-heading text-4xl sm:text-5xl font-bold text-[var(--branding-color)]">
         Nuestro Menú
       </h1>
-      <p class="text-lg text-text-secondary mt-2">
-        Estás en la mesa: <span class="font-bold text-text-primary"
-          >{tableCode}</span
-        >
-      </p>
     </header>
 
     {
       menuCategories.length > 0 ? (
-        <div class="space-y-12">
-          {menuCategories.map((category) => (
-            <section>
-              <h2 class="font-heading text-3xl font-semibold border-b-2 border-accent/20 pb-2 mb-8 text-text-primary">
-                {category.name}
-              </h2>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {category.items
-                  .filter(item => item.isAvailable)
-                  .map((item) => (
-                  <div data-menu-item={JSON.stringify(item)}>
-                    <MenuItemCard
-                      imageUrl={item.imageUrl || "/placeholder-image.jpg"}
-                      name={item.name}
-                      description={
-                        item.description || "Sin descripción disponible"
-                      }
-                      price={item.price}
-                      showAddButton={true}
-                      menuItemId={item.id}
-                    />
-                  </div>
-                ))}
+        <div id="menu-container">
+          <!-- Barra de Pestañas Adhesiva -->
+          <div class="sticky top-0 z-10 bg-zinc-900/80 backdrop-blur-lg shadow-md">
+            <div class="flex overflow-x-auto no-scrollbar border-b border-zinc-700" role="tablist">
+              {menuCategories.map((category, index) => (
+                <button
+                  role="tab"
+                  class={`${tabBaseClasses} ${index === 0 ? tabActiveClasses : tabInactiveClasses}`}
+                  data-tab-target={`#panel-${category.id}`}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <!-- Paneles de Contenido -->
+          <div class="p-4 sm:p-6 md:p-8">
+            {menuCategories.map((category, index) => (
+              <div
+                id={`panel-${category.id}`}
+                class={`tab-panel ${index !== 0 ? 'hidden' : ''}`}
+                role="tabpanel"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {category.items
+                    .filter((item) => item.isAvailable)
+                    .map((item) => (
+                      <div data-menu-item={JSON.stringify(item)}>
+                        <MenuItemCard
+                          imageUrl={item.imageUrl || "/placeholder-image.jpg"}
+                          name={item.name}
+                          description={item.description || "Sin descripción disponible"}
+                          price={item.price}
+                          showAddButton={true}
+                          menuItemId={item.id}
+                          brandingColor={brandingColor}
+                        />
+                      </div>
+                    ))}
+                </div>
               </div>
-            </section>
-          ))}
+            ))}
+          </div>
         </div>
       ) : error ? (
         <div class="text-center text-red-400 py-20">
-          <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
           <p class="text-xl mb-2">{error}</p>
-          <p class="text-text-secondary">
-            Por favor, verifica la URL o contacta al restaurante
-          </p>
         </div>
       ) : (
-        <div class="text-center text-text-secondary py-20">
-          <svg class="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <p class="text-xl mb-2">
-            No hay platos disponibles en este momento
-          </p>
-          <p>
-            El restaurante podría estar actualizando su menú
-          </p>
+        <div class="text-center text-zinc-500 py-20">
+          <p class="text-xl mb-2">No hay platos disponibles</p>
         </div>
       )
     }
   </main>
 
-  <!-- Modal del Carrito -->
   <CartModal />
-  
-  <!-- Script del Carrito -->
   <script src="../../../../../scripts/cart-manager.ts"></script>
+
+  <script define:vars={{ tabActiveClasses, tabInactiveClasses }}>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = document.querySelectorAll('[role="tab"][data-tab-target]');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Ocultar todos los paneles
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+          
+          // Resetear todas las pestañas a su estado inactivo
+          tabs.forEach(t => {
+            t.className = t.className.replace(tabActiveClasses, tabInactiveClasses);
+          });
+
+          // Activar la pestaña y panel clickeados
+          tab.className = tab.className.replace(tabInactiveClasses, tabActiveClasses);
+          const targetPanel = document.querySelector(tab.dataset.tabTarget);
+          if (targetPanel) {
+            targetPanel.classList.remove('hidden');
+          }
+        });
+      });
+    });
+  </script>
 </Layout>

@@ -1,0 +1,37 @@
+---
+interface Props {
+  id: string;
+  title?: string;
+  message?: string;
+}
+const { id, title = 'Confirmación', message = '¿Estás seguro?' } = Astro.props;
+---
+
+<div
+  id={id}
+  class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4"
+>
+  <!-- Backdrop -->
+  <div class="modal-backdrop absolute inset-0"></div>
+
+  <!-- Panel del Modal -->
+  <div
+    class="modal-panel bg-surface rounded-lg shadow-xl w-full max-w-md relative"
+  >
+    <!-- Contenido del Modal -->
+    <main class="p-6">
+      <h2 id={`${id}-title`} class="font-heading text-xl font-bold mb-4">{title}</h2>
+      <p id={`${id}-message`} class="text-text-secondary mb-6">{message}</p>
+      
+      <!-- Botones de Acción -->
+      <div class="flex justify-end gap-4">
+        <button id={`${id}-cancel-btn`} class="px-4 py-2 rounded-lg bg-gray-600/20 text-text-primary hover:bg-gray-600/40 transition-colors">
+          Cancelar
+        </button>
+        <button id={`${id}-confirm-btn`} class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">
+          Confirmar
+        </button>
+      </div>
+    </main>
+  </div>
+</div>

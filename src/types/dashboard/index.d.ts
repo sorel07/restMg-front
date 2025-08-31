@@ -16,7 +16,7 @@ export interface RecentOrder {
   status: string;
   createdAt: string;
   items: OrderItem[];
-  total: number;
+     totalPrice: number;
 }
 
 export interface OrderItem {
@@ -30,7 +30,6 @@ export interface DashboardTable {
   id: string;
   code: string;
   status: 'Available' | 'Occupied' | 'Reserved' | 'Maintenance';
-  seats?: number;
 }
 
 export interface DashboardData {
@@ -45,7 +44,7 @@ export interface NewOrderEvent {
   orderId: string;
   orderCode: string;
   tableCode: string;
-  total: number;
+  totalPrice: number;
   items: OrderItem[];
   createdAt: string;
 }

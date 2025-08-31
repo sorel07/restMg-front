@@ -3,10 +3,12 @@
 export const prerender = true;
 
 import AdminLayout from "../../../layouts/AdminLayout.astro";
+// Obtén restaurantId desde Astro.locals usando type assertion para evitar error de tipo
+const restaurantId = (Astro.locals as any)?.restaurantId || "";
 ---
 
 <AdminLayout title="Vista de Cocina">
-  <div class="h-full flex flex-col">
+  <div id="app-root" data-restaurant-id={restaurantId} class="h-full flex flex-col">
     <!-- Header de la Vista de Cocina -->
     <div class="flex justify-between items-center mb-6">
       <div class="flex items-center gap-4">

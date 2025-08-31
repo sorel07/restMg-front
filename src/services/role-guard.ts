@@ -1,6 +1,6 @@
 import { getUserSession } from './auth';
 
-export type UserRole = 'Admin' | 'Kitchen';
+export type UserRole = 'Admin' | 'Kitchen' | 'Awaiter';
 
 export interface UserInfo {
   userId: string;
@@ -20,22 +20,16 @@ export function getCurrentUser(): UserInfo | null {
 
     // Intentar obtener información adicional del localStorage
     const savedInfo = localStorage.getItem('user_info');
-    let additionalInfo = {};
-    if (savedInfo) {
-      try {
-        additionalInfo = JSON.parse(savedInfo);
-      } catch (e) {
-        console.warn('Error parsing saved user info:', e);
-      }
-    }
+    const infoFromStorage = savedInfo ? JSON.parse(savedInfo) : {};
 
     return {
+      ...infoFromStorage,
       userId: userSession.sub,
-      restaurantId: userSession.restaurantId,
-      fullName: (additionalInfo as any)?.fullName || '',
       email: userSession.email,
-      role: userSession.role as UserRole,
-      ...additionalInfo
+      // Dar prioridad al rol del token, pero usar el de localStorage si no existe
+      role: (userSession.role || infoFromStorage?.role) as UserRole,
+      // Dar prioridad al restaurantId del token, pero usar el de localStorage si no existe
+      restaurantId: userSession.restaurantId || infoFromStorage?.restaurantId,
     };
   } catch (error) {
     console.error('Error getting current user:', error);
@@ -55,8 +49,17 @@ export function hasRole(requiredRole: UserRole): boolean {
  * Verifica si el usuario puede acceder a una ruta específica
  */
 export function canAccessRoute(path: string): boolean {
+  // Rutas públicas que no requieren autenticación
+  const publicPaths = ['/login', '/onboarding'];
+  if (publicPaths.includes(path) || path.startsWith('/r/') || path.startsWith('/order/status')) {
+    return true;
+  }
+
   const user = getCurrentUser();
-  if (!user) return false;
+  if (!user) {
+    // Si no es una ruta pública y no hay usuario, denegar acceso
+    return false;
+  }
 
   // Rutas específicas para cada rol
   if (path.startsWith('/kitchen')) {
@@ -67,6 +70,11 @@ export function canAccessRoute(path: string): boolean {
     return user.role === 'Admin';
   }
 
+  if (path.startsWith('/awaiter')) {
+    return user.role === 'Awaiter' || user.role === 'Admin';
+  }
+
+  // Permitir acceso a otras rutas si el usuario está logueado (ej. /)
   return true;
 }
 
@@ -85,6 +93,11 @@ export function redirectToRolePage(): void {
   // Si el usuario de cocina está en admin, redirigir a cocina
   if (user.role === 'Kitchen' && currentPath.startsWith('/admin')) {
     window.location.href = '/kitchen';
+    return;
+  }
+
+  if (user.role === 'Awaiter' && !currentPath.startsWith('/awaiter')) {
+    window.location.href = '/awaiter';
     return;
   }
 

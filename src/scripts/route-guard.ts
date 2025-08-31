@@ -17,13 +17,12 @@ function checkRouteAccess(): void {
     // Redirigir según el rol
     if (user.role === 'Kitchen') {
       window.location.href = '/kitchen';
+    } else if (user.role === 'Awaiter') {
+      window.location.href = '/awaiter';
     } else {
       window.location.href = '/admin';
     }
   }
 }
-
-// Ejecutar la verificación cuando se carga la página
-document.addEventListener('DOMContentLoaded', checkRouteAccess);
 
 export { checkRouteAccess };

@@ -1,5 +1,7 @@
-import { apiClient } from '../services/api';
+import { apiClient, markOrderAsDelivered } from '../services/api';
 import notificationManager from '../services/notifications';
+import { notificationSignalRService } from '../services/notification-signalr'; // New notification hub service
+import AudioNotificationManager from '../services/audio-notifications';
 import type {
     DashboardSummary,
     DashboardTable,
@@ -16,8 +18,10 @@ interface TableModalState {
 class DashboardPageManager {
   private refreshInterval: NodeJS.Timeout | null = null;
   private tableModalState: TableModalState = { isOpen: false, mode: 'create' };
+  private audioNotifier: AudioNotificationManager; // Add audio notifier
 
   constructor() {
+    this.audioNotifier = new AudioNotificationManager(); // Initialize audio notifier
     this.init();
   }
 
@@ -30,8 +34,8 @@ class DashboardPageManager {
     // Configurar botones de acción
     this.setupEventListeners();
     
-    // Configurar auto-refresh cada 30 segundos
-    this.startAutoRefresh();
+    // Setup notification SignalR
+    this.setupNotificationSignalR();
     
     // Actualizar timestamp inicial
     this.updateLastUpdated();
@@ -57,11 +61,36 @@ class DashboardPageManager {
     }
   }
 
-  private startAutoRefresh(): void {
-    // Refrescar datos cada 30 segundos
-    this.refreshInterval = setInterval(() => {
-      this.loadDashboardData(false); // Sin mostrar loading
-    }, 30000);
+  // --- SIGNALR (Notifications Hub) --- //
+  private async setupNotificationSignalR() {
+    try {
+      await notificationSignalRService.connect();
+      notificationSignalRService.setEventHandlers({
+        onNewOrderForApproval: (orderPayload: RecentOrder) => {
+          console.log("Nuevo pedido necesita aprobación (Admin):", orderPayload);
+          // For admin dashboard, we just reload recent orders to reflect the new one
+          this.loadRecentOrders(false); 
+          this.audioNotifier.notifyNewOrder();
+          notificationManager.success(`Nuevo pedido #${orderPayload.orderCode} en la mesa ${orderPayload.tableCode} esperando aprobación.`);
+        },
+        onOrderStatusUpdated: (orderId: string, newStatus: string) => {
+          console.log(`[dashboard-page.ts] Notificación: Orden ${orderId} cambió a estado: ${newStatus}`);
+          const recentOrdersList = document.getElementById('recent-orders-list');
+          const orderElement = recentOrdersList?.querySelector(`[data-order-id="${orderId}"]`);
+
+          if (orderElement) {
+            if (newStatus === "Delivered" || newStatus === "Cancelled") {
+              orderElement.remove();
+              console.log(`[dashboard-page.ts] Orden ${orderId} eliminada de "Comandas Recientes".`);
+            } else {
+              console.log(`[dashboard-page.ts] Orden ${orderId} actualizada en "Comandas Recientes" a ${newStatus}.`);
+            }
+          }
+        }
+      });
+    } catch (error) {
+      notificationManager.error('No se pudo conectar al hub de notificaciones para el dashboard.');
+    }
   }
 
   private updateLastUpdated(): void {
@@ -234,36 +263,49 @@ class DashboardPageManager {
       }
 
       if (gridInner) {
-        gridInner.innerHTML = tables.map(table => `
-          <div class="bg-background p-4 rounded-lg relative border border-white/5 hover:border-accent/30 transition-colors group">
-            <!-- Status indicator -->
-            <div class="absolute top-3 right-3 w-3 h-3 rounded-full ${this.getStatusColor(table.status)}"></div>
-            
-            <!-- Table info -->
-            <div class="mb-4">
-              <h3 class="font-bold text-lg text-text-primary">${table.code}</h3>
-              <p class="text-xs text-text-secondary">
-                Estado: <span class="${this.getStatusTextColor(table.status)}">${this.getStatusText(table.status)}</span>
-              </p>
-            </div>
+        gridInner.innerHTML = tables.map(table => {
+          const isOccupied = table.status === 'Occupied';
+          return `
+            <div class="bg-background p-4 rounded-lg relative border border-white/5 hover:border-accent/30 transition-colors group">
+              <!-- Status indicator -->
+              <div class="absolute top-3 right-3 w-3 h-3 rounded-full ${this.getStatusColor(table.status)}"></div>
+              
+              <!-- Table info -->
+              <div class="mb-4">
+                <h3 class="font-bold text-lg text-text-primary">${table.code}</h3>
+                <p class="text-xs text-text-secondary">
+                  Estado: <span class="${this.getStatusTextColor(table.status)}">${this.getStatusText(table.status)}</span>
+                </p>
+              </div>
 
-            <!-- Actions -->
-            <div class="flex gap-2">
-              <button 
-                class="flex-1 bg-accent/20 text-accent hover:bg-accent/30 py-2 px-3 rounded-md text-xs font-medium transition-colors"
-                onclick="dashboardManager.generateQR('${table.id}', '${table.code}')"
-              >
-                QR
-              </button>
-              <button 
-                class="flex-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 py-2 px-3 rounded-md text-xs font-medium transition-colors"
-                onclick="dashboardManager.editTable('${table.id}')"
-              >
-                Editar
-              </button>
+              <!-- Actions -->
+              <div class="flex gap-2">
+                <button 
+                  class="flex-1 bg-accent/20 text-accent hover:bg-accent/30 py-2 px-3 rounded-md text-xs font-medium transition-colors"
+                  onclick="dashboardManager.generateQR('${table.id}', '${table.code}')"
+                >
+                  QR
+                </button>
+                <button 
+                  class="flex-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 py-2 px-3 rounded-md text-xs font-medium transition-colors"
+                  onclick="dashboardManager.editTable('${table.id}')"
+                >
+                  Editar
+                </button>
+              </div>
+              ${isOccupied ? `
+              <div class="mt-3">
+                <button 
+                  class="w-full bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
+                  onclick="dashboardManager.releaseTable('${table.id}')"
+                >
+                  Liberar Mesa
+                </button>
+              </div>
+              ` : ''}
             </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
         grid?.classList.remove('hidden');
         gridInner.classList.add('fade-in');
@@ -290,7 +332,7 @@ class DashboardPageManager {
     }
 
     try {
-      const response = await apiClient.get<RecentOrder[]>('/kitchen?limit=5&status=recent');
+      const response = await apiClient.get<RecentOrder[]>('/kitchen/orders?limit=5');
       const orders = response.data;
 
       loading?.classList.add('hidden');
@@ -301,36 +343,65 @@ class DashboardPageManager {
       }
 
       if (list) {
-        list.innerHTML = orders.map(order => `
-          <div class="bg-background p-4 rounded-lg border border-white/5 hover:border-orange-400/30 transition-colors cursor-pointer"
-               onclick="window.location.href='/admin/kitchen'">
-            <div class="flex justify-between items-start mb-2">
-              <div class="flex items-center space-x-2">
-                <span class="font-semibold text-text-primary">#${order.id.toString().padStart(3, '0')}</span>
-                <span class="text-xs px-2 py-1 rounded-full ${this.getOrderStatusStyle(order.status)}">
-                  ${this.getOrderStatusText(order.status)}
-                </span>
+        list.innerHTML = orders.map(order => {
+          const canDeliver = order.status === 'Ready';
+          return `
+            <div class="bg-background p-4 rounded-lg border border-white/5 hover:border-orange-400/30 transition-colors">
+              <div class="flex justify-between items-start mb-2">
+                <div class="flex items-center space-x-2">
+                  <span class="font-semibold text-text-primary">#${order.orderCode}</span>
+                  <span class="text-xs px-2 py-1 rounded-full ${this.getOrderStatusStyle(order.status)}">
+                    ${this.getOrderStatusText(order.status)}
+                  </span>
+                </div>
+                <span class="text-text-secondary text-xs">${this.formatCurrency(order.totalPrice)}</span>
               </div>
-              <span class="text-text-secondary text-xs">${this.formatCurrency(order.total)}</span>
+              
+              <p class="text-text-secondary text-xs mb-2">Mesa: ${order.tableCode}</p>
+              
+              <div class="text-xs text-text-secondary mb-3">
+                <span>${this.formatOrderTime(order.createdAt)}</span>
+                <span class="ml-2">• ${order.items.length} ${order.items.length === 1 ? 'item' : 'items'}</span>
+              </div>
+
+              ${canDeliver ? `
+                <button data-order-id="${order.id}" class="deliver-btn w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm">Marcar como Entregado</button>
+              ` : ''}
             </div>
-            
-            <p class="text-text-secondary text-xs mb-2">Mesa: ${order.tableCode}</p>
-            
-            <div class="text-xs text-text-secondary">
-              <span>${this.formatOrderTime(order.createdAt)}</span>
-              <span class="ml-2">• ${order.items.length} ${order.items.length === 1 ? 'item' : 'items'}</span>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
         list.classList.remove('hidden');
         list.classList.add('fade-in');
+        this.assignOrderActionButtons();
       }
 
     } catch (err) {
       console.error('❌ Error loading recent orders:', err);
       loading?.classList.add('hidden');
       error?.classList.remove('hidden');
+    }
+  }
+
+  private assignOrderActionButtons(): void {
+    document.querySelectorAll('.deliver-btn').forEach(button => {
+      button.addEventListener('click', async (e) => {
+        const orderId = (e.target as HTMLElement).dataset.orderId;
+        if (orderId) {
+          await this.markAsDelivered(orderId);
+        }
+      });
+    });
+  }
+
+  private async markAsDelivered(orderId: string) {
+    try {
+      await markOrderAsDelivered(orderId);
+      notificationManager.success('Pedido marcado como entregado.');
+      await this.loadRecentOrders(false); // Recargar sin mostrar loading
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Error al marcar como entregado';
+      notificationManager.error(errorMessage);
     }
   }
 
@@ -359,6 +430,22 @@ class DashboardPageManager {
   editTable(tableId: string): void {
     // Por ahora, redirigir a la página de mesas
     window.location.href = '/admin/tables';
+  }
+
+  // New method to release a table
+  public async releaseTable(tableId: string): Promise<void> {
+    if (!confirm('¿Estás seguro de que quieres liberar esta mesa? Esto la marcará como Disponible.')) {
+      return;
+    }
+
+    try {
+      await apiClient.put(`/tables/${tableId}`, { status: 'Available' });
+      notificationManager.success('Mesa liberada con éxito.');
+      await this.loadTables(false); // Reload tables without showing loading
+    } catch (error) {
+      console.error('Error al liberar la mesa:', error);
+      notificationManager.error('Error al liberar la mesa. Por favor, intenta de nuevo.');
+    }
   }
 
   private openAddTableModal(): void {
@@ -430,14 +517,14 @@ class DashboardPageManager {
   }
 
   private getOrderStatusStyle(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'pending':
+    switch (status) {
+      case 'Pending':
         return 'bg-yellow-600/20 text-yellow-400';
-      case 'preparing':
+      case 'InPreparation':
         return 'bg-blue-600/20 text-blue-400';
-      case 'ready':
+      case 'Ready':
         return 'bg-green-600/20 text-green-400';
-      case 'delivered':
+      case 'Delivered':
         return 'bg-gray-600/20 text-gray-400';
       default:
         return 'bg-gray-600/20 text-gray-400';
@@ -445,14 +532,14 @@ class DashboardPageManager {
   }
 
   private getOrderStatusText(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'pending':
+    switch (status) {
+      case 'Pending':
         return 'Pendiente';
-      case 'preparing':
+      case 'InPreparation':
         return 'Preparando';
-      case 'ready':
-        return 'Listo';
-      case 'delivered':
+      case 'Ready':
+        return 'Listo para Entregar';
+      case 'Delivered':
         return 'Entregado';
       default:
         return status;
@@ -480,4 +567,3 @@ window.addEventListener('beforeunload', () => {
 });
 
 export { DashboardPageManager };
-

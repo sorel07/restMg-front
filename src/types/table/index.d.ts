@@ -2,6 +2,7 @@ export interface Table {
   id: string;
   code: string;
   status: string; // 'Available', 'Occupied', etc.
+  restaurantId: string; // GUID del restaurante propietario
 }
 
 // Request types para la API

@@ -8,14 +8,14 @@ export interface KitchenOrder {
   id: string;
   orderCode: string;
   tableCode: string;
-  status: 'Pending' | 'InPreparation' | 'Ready';
+  status: 'Pending' | 'InPreparation' | 'Ready' | 'Delivered';
   createdAt: string;
   items: KitchenOrderItem[];
 }
 
 export interface OrderStatusUpdatePayload {
   orderId: string;
-  newStatus: 'Pending' | 'InPreparation' | 'Ready';
+  newStatus: 'Pending' | 'InPreparation' | 'Ready' | 'Delivered';
 }
 
 // Estados de las columnas del Kanban

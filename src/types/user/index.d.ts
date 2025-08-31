@@ -12,13 +12,13 @@ export interface CreateUserData {
   fullName: string;
   email: string;
   password: string;
-  role: "Admin" | "Kitchen";
+  role: "Admin" | "Kitchen" | "Awaiter";
 }
 
 // Para el formulario de edición de usuario
 export interface UpdateUserData {
   fullName?: string;
   email?: string;
-  role?: "Admin" | "Kitchen";
+  role?: "Admin" | "Kitchen" | "Awaiter";
   isActive?: boolean;
 }

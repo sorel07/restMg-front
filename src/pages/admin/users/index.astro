@@ -57,6 +57,7 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
           id="fullName"
           name="fullName"
           required
+          autocomplete="off"
           class="w-full bg-background border border-white/20 rounded-md p-3 text-text-primary focus:ring-accent focus:border-accent transition-colors"
         />
       </div>
@@ -71,6 +72,7 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
           id="email"
           name="email"
           required
+          autocomplete="off"
           class="w-full bg-background border border-white/20 rounded-md p-3 text-text-primary focus:ring-accent focus:border-accent transition-colors"
         />
       </div>
@@ -85,6 +87,7 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
           id="password"
           name="password"
           minlength="8"
+          autocomplete="new-password"
           class="w-full bg-background border border-white/20 rounded-md p-3 text-text-primary focus:ring-accent focus:border-accent transition-colors"
         />
         <p class="text-xs text-text-secondary mt-1">
@@ -104,6 +107,7 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
         >
           <option value="Kitchen">Cocina</option>
           <option value="Admin">Administrador</option>
+          <option value="Awaiter">Mesero</option>
         </select>
       </div>
       <div class="flex items-center space-x-3 pt-2">

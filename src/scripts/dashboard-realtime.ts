@@ -61,7 +61,7 @@ class RealTimeDashboardManager {
         apiClient.get<DashboardSummary>('/dashboard/summary'),
         apiClient.get<TopDishToday[]>('/dashboard/top-dishes-today'),
         apiClient.get<DashboardTable[]>('/tables'),
-        apiClient.get<RecentOrder[]>('/kitchen/orders?status=pending&limit=5')
+        apiClient.get<RecentOrder[]>('/kitchen/orders?limit=5')
       ]);
 
       // Actualizar estado
@@ -194,7 +194,7 @@ class RealTimeDashboardManager {
     this.state.summary.ordersToday += 1;
     
     // Agregar al revenue del día
-    this.state.summary.revenueToday += order.total;
+    this.state.summary.revenueToday += order.totalPrice;
     
     // Recalcular ticket promedio
     this.state.summary.averageTicketToday = this.state.summary.revenueToday / this.state.summary.ordersToday;
@@ -237,7 +237,7 @@ class RealTimeDashboardManager {
       status: 'pending',
       createdAt: order.createdAt,
       items: order.items,
-      total: order.total
+      totalPrice: order.totalPrice
     };
 
     // Agregar al principio y limitar a 5
@@ -403,7 +403,7 @@ class RealTimeDashboardManager {
                 ${this.getOrderStatusText(order.status)}
               </span>
             </div>
-            <span class="text-text-secondary text-xs">${this.formatCurrency(order.total)}</span>
+            <span class="text-text-secondary text-xs">${this.formatCurrency(order.totalPrice)}</span>
           </div>
           
           <p class="text-text-secondary text-xs mb-2">Mesa: ${order.tableCode}</p>
@@ -504,7 +504,7 @@ class RealTimeDashboardManager {
 
   private showNewOrderNotification(order: NewOrderEvent): void {
     notificationManager.show(
-      `¡Nuevo pedido! #${order.orderCode} - Mesa ${order.tableCode} (${this.formatCurrency(order.total)})`, 
+      `¡Nuevo pedido! #${order.orderCode} ${order.tableCode} (${this.formatCurrency(order.totalPrice)})`, 
       'info', 
       5000
     );

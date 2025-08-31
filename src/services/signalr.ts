@@ -8,10 +8,12 @@ export interface SignalRConnectionState {
   maxReconnectAttempts: number;
 }
 
+import type { OrderStatusUpdatePayload } from '../types/kitchen';
+
 export interface SignalREventHandlers {
   onNewOrder?: (order: any) => void;
   onTableStateUpdated?: (update: { tableId: string; newState: string }) => void;
-  onOrderStatusUpdated?: (update: { orderId: string; newStatus: string }) => void;
+  onOrderStatusUpdated?: (update: OrderStatusUpdatePayload) => void;
   onConnectionStateChanged?: (connected: boolean) => void;
 }
 
@@ -233,7 +235,7 @@ class SignalRService {
     if (!this.state.connection) return;
 
     // Evento: Nuevo pedido
-    this.state.connection.on('NewOrder', (order: any) => {
+    this.state.connection.on('NewOrderReceived', (order: any) => {
       console.log('🆕 Nuevo pedido recibido:', order);
       this.eventHandlers.onNewOrder?.(order);
     });
@@ -247,7 +249,16 @@ class SignalRService {
     // Evento: Estado de pedido actualizado
     this.state.connection.on('OrderStatusUpdated', (update: { orderId: string; newStatus: string }) => {
       console.log('📋 Estado de pedido actualizado:', update);
-      this.eventHandlers.onOrderStatusUpdated?.(update);
+      
+      const validStatus = ['Pending', 'InPreparation', 'Ready'];
+      if (validStatus.includes(update.newStatus)) {
+        this.eventHandlers.onOrderStatusUpdated?.({
+          orderId: update.orderId,
+          newStatus: update.newStatus as 'Pending' | 'InPreparation' | 'Ready',
+        });
+      } else {
+        console.error(`[SignalR] Estado de pedido inválido recibido: ${update.newStatus}`);
+      }
     });
   }
 
