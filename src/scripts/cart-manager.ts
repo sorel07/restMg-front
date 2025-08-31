@@ -319,13 +319,15 @@ class CartManager {
   }
 
   private async placeOrder() {
-    debugger;
     console.log("[cart-manager.ts] Iniciando placeOrder...");
     const placeOrderBtn = document.getElementById(
       "place-order-btn"
     ) as HTMLButtonElement;
+
     if (!this.menuData || !this.cartService || placeOrderBtn.disabled) {
-      console.warn("[cart-manager.ts] placeOrder abortado: Faltan datos, servicio o el botón está deshabilitado.");
+      console.warn(
+        "[cart-manager.ts] placeOrder abortado: Faltan datos, servicio o el botón está deshabilitado."
+      );
       return;
     }
 
@@ -335,7 +337,6 @@ class CartManager {
       return;
     }
 
-    console.log("[cart-manager.ts] Deshabilitando botón y mostrando spinner.");
     placeOrderBtn.disabled = true;
     this.showOrderLoading();
 
@@ -344,27 +345,30 @@ class CartManager {
         this.menuData.restaurantId,
         this.menuData.tableId
       );
-      console.log("[cart-manager.ts] Llamando a createOrder con:", orderData);
-      const response = await createOrder(orderData);
-      console.log("[cart-manager.ts] Respuesta completa de createOrder:", response);
-      console.log("[cart-manager.ts] response.orderCode:", response.orderCode);
-      console.log("[cart-manager.ts] this.menuData.restaurantId:", this.menuData.restaurantId);
+      const orderResponse = await createOrder(orderData);
 
       this.cartService.clearCart();
       this.hideCartModal();
-      
-      const statusUrl = `/order/status?code=${response.orderCode}&restaurantId=${this.menuData.restaurantId}`;
-      console.log(`[cart-manager.ts] Redirigiendo a: ${statusUrl}`);
-      window.location.href = statusUrl;
 
+      // ✅ Usar el subdomain de la URL actual
+      const currentPath = window.location.pathname;
+      const subdomain = currentPath.split("/")[2];
+
+      const statusUrl = `/r/${subdomain}/order/status/${orderResponse.orderCode}`;
+      window.location.href = statusUrl;
     } catch (error: any) {
-      console.error("[cart-manager.ts] Error en el bloque try/catch de placeOrder:", error);
+      console.error(
+        "[cart-manager.ts] Error en el bloque try/catch de placeOrder:",
+        error
+      );
       const errorMessage =
         error.response?.data?.message ||
         "Error al procesar tu pedido. Por favor intenta de nuevo.";
       this.showErrorToast(errorMessage);
     } finally {
-      console.log("[cart-manager.ts] Bloque finally: Ocultando spinner y rehabilitando botón.");
+      console.log(
+        "[cart-manager.ts] Bloque finally: Ocultando spinner y rehabilitando botón."
+      );
       this.hideOrderLoading();
       placeOrderBtn.disabled = false;
     }

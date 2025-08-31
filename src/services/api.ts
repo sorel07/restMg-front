@@ -1,9 +1,10 @@
-import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import type { Table } from "../types/table";
 import { getToken, redirectToLogin, removeToken, saveToken } from "./auth";
 
 import type { AuthResult, LoginData } from "../types/auth";
 import type { MenuBySubdomainResponse, MenuCategory } from "../types/menu";
+import type { Order } from "../types/order";
 import type {
   OnboardingData,
   OnboardResult,
@@ -174,7 +175,7 @@ export async function updateTable(tableId: string, data: { code: string; status:
 }
 
 export async function getRestaurantBySubdomain(subdomain: string): Promise<RestaurantDetails> {
-  const response = await apiClient.get(`/restaurants/by-subdomain/${subdomain}`);
+  const response = await apiClient.get(`/menu/by-subdomain/${subdomain}`);
   return response.data;
 }
 
@@ -204,8 +205,10 @@ export async function createOrder(orderData: {
   }
 }
 
-export async function getOrderByCode(code: string, restaurantId: string): Promise<any> {
-  const response = await apiClient.get(`/orders/${code}?restaurantId=${restaurantId}`, { headers: { 'X-Public-Request': 'true' } });
+export async function getOrderByCode(code: string, restaurantId: string): Promise<Order> {
+  const response = await apiClient.get(`/orders/${code}?restaurantId=${restaurantId}`, { 
+    headers: { 'X-Public-Request': 'true' } 
+  });
   return response.data;
 }
 

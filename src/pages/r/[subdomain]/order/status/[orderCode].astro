@@ -1,0 +1,50 @@
+---
+import Layout from "../../../../../layouts/Layout.astro";
+import { getMenuBySubdomain } from "../../../../../services/api";
+
+const { subdomain, orderCode } = Astro.params;
+
+console.log("🔍 [Astro] Params:", { subdomain, orderCode });
+console.log("🔍 [Astro] URL:", Astro.url.pathname);
+
+if (!subdomain || !orderCode) {
+  console.log("❌ [Astro] Falta subdomain o orderCode");
+  return Astro.redirect("/");
+}
+
+let restaurantDetails;
+try {
+  console.log("🔍 [Astro] Obteniendo restaurante para subdomain:", subdomain);
+  restaurantDetails = await getMenuBySubdomain(subdomain);
+  console.log("✅ [Astro] Restaurante obtenido:", restaurantDetails);
+} catch (error) {
+  console.error("❌ [Astro] Error obteniendo restaurante:", error);
+  return Astro.redirect("/");
+}
+
+console.log(
+  "🔍 [Astro] restaurantDetails.id:",
+  restaurantDetails?.restaurantId
+);
+---
+
+<Layout title="Estado del Pedido">
+  <div class="min-h-screen bg-gray-900 py-8 print:bg-white">
+    <div id="order-container" class="max-w-2xl mx-auto px-4">
+      <div class="bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+        <h1 class="text-2xl font-bold text-white mb-2">Cargando pedido...</h1>
+        <p class="text-gray-400">Por favor, espera un momento.</p>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="order-data"
+    data-order-code={orderCode}
+    data-restaurant-id={restaurantDetails?.restaurantId}
+    style="display: none;"
+  >
+  </div>
+
+  <script src="../../../../../scripts/orderStatus.ts"></script>
+</Layout>
