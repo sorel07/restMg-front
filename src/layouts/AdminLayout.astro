@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import Sidebar from "../components/Sidebar.astro";
+import AcademicFooter from "../components/AcademicFooter.astro";
 
 interface Props {
   title: string;
@@ -19,11 +20,16 @@ const { title } = Astro.props;
     
   </head>
   <body class="bg-background font-body text-text-primary antialiased">
-    <div class="flex h-screen">
-      <Sidebar />
-      <main class="flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto">
-        <slot />
-      </main>
+    <div class="flex h-screen flex-col">
+      <div class="flex flex-1">
+        <Sidebar />
+        <main class="flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col">
+          <div class="flex-1">
+            <slot />
+          </div>
+          <AcademicFooter variant="compact" className="mt-12" />
+        </main>
+      </div>
     </div>
     
     <!-- Contenedor global de notificaciones -->

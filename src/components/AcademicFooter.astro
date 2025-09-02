@@ -1,0 +1,183 @@
+---
+// Componente Footer Académico para mostrar información del proyecto de grado
+interface Props {
+  variant?: 'default' | 'compact' | 'minimal';
+  className?: string;
+}
+
+const { variant = 'default', className = '' } = Astro.props;
+---
+
+<footer class={`academic-footer bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-gray-200 ${className}`}>
+  {variant === 'minimal' ? (
+    <!-- Versión mínima para vistas de cliente -->
+    <div class="container mx-auto px-4 py-6">
+      <div class="flex flex-col items-center text-center space-y-4">
+        <div class="flex items-center justify-center space-x-8">
+          <img src="/sistel.png" alt="SISTEL" class="h-12 w-auto opacity-80" />
+          <img src="/logo-teleco.png" alt="UTS Ingeniería de Telecomunicaciones" class="h-12 w-auto opacity-80" />
+          <img src="/acreditacion.png" alt="UTS Acreditación" class="h-12 w-auto opacity-80" />
+        </div>
+        <p class="text-sm text-gray-600">
+          <strong>Proyecto de Grado</strong> - Ingeniería de Telecomunicaciones UTS
+        </p>
+      </div>
+    </div>
+  ) : variant === 'compact' ? (
+    <!-- Versión compacta para dashboards -->
+    <div class="container mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+        <!-- Logos -->
+        <div class="flex items-center justify-center lg:justify-start space-x-6">
+          <img src="/sistel.png" alt="SISTEL" class="h-16 w-auto" />
+          <img src="/logo-teleco.png" alt="UTS Ingeniería de Telecomunicaciones" class="h-16 w-auto" />
+          <img src="/acreditacion.png" alt="UTS Acreditación" class="h-16 w-auto" />
+        </div>
+        
+        <!-- Información del Proyecto -->
+        <div class="text-center lg:col-span-2">
+          <h3 class="text-lg font-bold text-gray-800 mb-2">Proyecto de Grado - Ingeniería de Telecomunicaciones</h3>
+          <p class="text-sm text-gray-600 mb-4">
+            Sistema de Gestión de Restaurantes con Tecnología Web Moderna
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+            <div>
+              <p><strong>Desarrolladores:</strong></p>
+              <p>• Sorel Carrillo Poveda</p>
+              <p>• Santiago de la Cruz López Vecino</p>
+            </div>
+            <div>
+              <p><strong>Director:</strong> Johan Leandro Téllez Garzón</p>
+              <p><strong>Co-director:</strong> Ricardo Medina Puentes</p>
+              <p><strong>Evaluador:</strong> Nelber Andreiv Montaguth Useche</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <!-- Versión completa para páginas principales -->
+    <div class="container mx-auto px-4 py-12">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Logos e Información Institucional -->
+        <div class="lg:col-span-1">
+          <div class="space-y-6">
+            <div class="text-center">
+              <img src="/sistel.png" alt="SISTEL Telecomunicaciones" class="h-20 w-auto mx-auto mb-4" />
+              <h4 class="text-sm font-semibold text-gray-800">SISTEL</h4>
+              <p class="text-xs text-gray-600">Telecomunicaciones</p>
+            </div>
+            
+            <div class="text-center">
+              <img src="/logo-teleco.png" alt="UTS Ingeniería de Telecomunicaciones" class="h-20 w-auto mx-auto mb-4" />
+              <h4 class="text-sm font-semibold text-gray-800">Ingeniería de Telecomunicaciones</h4>
+              <p class="text-xs text-gray-600">Unidades Tecnológicas de Santander</p>
+            </div>
+            
+            <div class="text-center">
+              <img src="/acreditacion.png" alt="UTS Programa Acreditado" class="h-20 w-auto mx-auto mb-4" />
+              <h4 class="text-sm font-semibold text-gray-800">Programa Acreditado</h4>
+              <p class="text-xs text-gray-600">Alta Calidad</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del Proyecto -->
+        <div class="lg:col-span-3">
+          <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div class="text-center mb-8">
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Proyecto de Grado</h2>
+              <h3 class="text-xl font-semibold text-blue-600 mb-4">
+                Sistema de Gestión de Restaurantes con Tecnología Web Moderna
+              </h3>
+              <p class="text-gray-600 max-w-3xl mx-auto">
+                Desarrollo de una plataforma integral para la gestión de restaurantes que incluye 
+                administración de menús, gestión de pedidos en tiempo real, sistema de pagos, 
+                y análisis de datos utilizando tecnologías web modernas.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <!-- Desarrolladores -->
+              <div class="text-center">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  Desarrolladores
+                </h4>
+                <div class="space-y-2">
+                  <p class="text-sm text-gray-700 font-medium">Sorel Carrillo Poveda</p>
+                  <p class="text-sm text-gray-700 font-medium">Santiago de la Cruz López Vecino</p>
+                </div>
+              </div>
+
+              <!-- Dirección Académica -->
+              <div class="text-center">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  Dirección
+                </h4>
+                <div class="space-y-2">
+                  <div>
+                    <p class="text-xs text-gray-500">Director</p>
+                    <p class="text-sm text-gray-700 font-medium">Johan Leandro Téllez Garzón</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-gray-500">Co-director</p>
+                    <p class="text-sm text-gray-700 font-medium">Ricardo Medina Puentes</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Evaluación -->
+              <div class="text-center">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                  </svg>
+                  Evaluación
+                </h4>
+                <div>
+                  <p class="text-xs text-gray-500">Evaluador</p>
+                  <p class="text-sm text-gray-700 font-medium">Nelber Andreiv Montaguth Useche</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+              <p class="text-sm text-gray-500">
+                Unidadades Tecnológica de Santander (UTS) • Programa de Ingeniería de Telecomunicaciones
+              </p>
+              <p class="text-xs text-gray-400 mt-2">
+                {new Date().getFullYear()} • Proyecto desarrollado con tecnologías web modernas
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+</footer>
+
+<style>
+  .academic-footer {
+    margin-top: auto;
+  }
+  
+  .academic-footer img {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  
+  .academic-footer img:hover {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+</style>

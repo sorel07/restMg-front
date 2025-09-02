@@ -1,6 +1,7 @@
 ---
 import CartModal from "../../../../../components/CartModal.astro";
 import MenuItemCard from "../../../../../components/MenuItemCard.astro";
+import AcademicFooter from "../../../../../components/AcademicFooter.astro";
 import Layout from "../../../../../layouts/Layout.astro";
 import {
   getMenuBySubdomain,
@@ -13,9 +14,12 @@ const { subdomain, tableId } = Astro.params;
 
 let menuCategories: MenuCategory[] = [];
 let restaurantId: string | null = null;
+let restaurantName: string = "Restaurante";
+let bannerUrl: string | null = null;
+let logoUrl: string | null = null;
 let error: string | null = null;
 let tableCode: string = "";
-let brandingColor: string = "#FF5733"; // Color por defecto, ya que no podemos obtenerlo de la API por ahora
+let brandingColor: string = "#FF5733"; // Color por defecto
 
 if (!subdomain) {
   error = "Restaurante no encontrado. La URL es incorrecta.";
@@ -25,6 +29,10 @@ if (!subdomain) {
     if (menuResponse && menuResponse.restaurantId) {
       restaurantId = menuResponse.restaurantId;
       menuCategories = menuResponse.categories || [];
+      restaurantName = menuResponse.restaurantName || "Restaurante";
+      bannerUrl = menuResponse.bannerUrl || null;
+      logoUrl = menuResponse.logoUrl || null;
+      brandingColor = menuResponse.brandingColor || "#FF5733";
       const tables = await getTables();
       const foundTable = tables.find((t) => t.id === tableId);
       tableCode = foundTable ? foundTable.code : "";
@@ -51,69 +59,339 @@ const menuData = {
           .map((item) => ({ menuItemId: item.id, quantity: 1 })) || []
     ) || [],
 };
-
-// Clases de Tailwind para las pestañas
-const tabBaseClasses = "px-4 py-3 font-semibold text-center whitespace-nowrap transition-colors duration-200 ease-in-out focus:outline-none";
-const tabInactiveClasses = "text-zinc-400 hover:text-white border-b-2 border-transparent";
-const tabActiveClasses = `text-[var(--branding-color)] border-b-2 border-[var(--branding-color)]`;
 ---
 
 <style define:vars={{ brandingColor }}>
   :root {
     --branding-color: var(--brandingColor);
   }
+  
+  /* Prevenir scroll horizontal en toda la página */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+  
+  .banner-gradient {
+    background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%);
+  }
+  
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .text-shadow {
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+  }
+  
+  .logo-glow {
+    box-shadow: 0 0 30px rgba(255,255,255,0.3);
+  }
+  
+  .floating-animation {
+    animation: floating 3s ease-in-out infinite;
+  }
+  
+  @keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .category-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .category-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  @media (min-width: 768px) {
+    .category-card:hover {
+      transform: translateY(-4px);
+    }
+  }
+  
+  .gradient-overlay {
+    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%);
+  }
+  
+  /* Scrollbar personalizado para los tabs */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Mejor responsividad en dispositivos muy pequeños */
+  @media (max-width: 320px) {
+    .glass-effect {
+      padding: 0.25rem;
+    }
+    
+    .category-card {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+    }
+  }
+  
+  /* Optimización para devices con touch */
+  @media (hover: none) {
+    .category-card:hover {
+      transform: none;
+    }
+    
+    .group:hover .group-hover\:scale-110 {
+      transform: none;
+    }
+    
+    .hover\:scale-105:hover {
+      transform: none;
+    }
+  }
+  
+  /* Safe area para dispositivos con notch */
+  @supports (padding: max(0px)) {
+    .safe-area-top {
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+    
+    .safe-area-bottom {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+  }
+  
+  /* Estilos para el carrito flotante */
+  #floating-cart-button {
+    animation: slideIn 0.3s ease-out;
+    backdrop-filter: blur(8px);
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(100px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Grid mejorado para evitar overflow */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  @media (max-width: 640px) {
+    .menu-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 0 0.5rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .menu-grid {
+      gap: 2rem;
+    }
+  }
 </style>
 
-<Layout title={"Menú del Restaurante"}>
+<Layout title={"Menú del Restaurante"} showAcademicFooter={false}>
   <div data-menu-info={JSON.stringify(menuData)} class="hidden"></div>
 
-  <main class="container mx-auto pb-24">
-    <header class="text-center my-8 px-4">
-      <h1 class="font-heading text-4xl sm:text-5xl font-bold text-[var(--branding-color)]">
-        Nuestro Menú
-      </h1>
-    </header>
+  <main class="min-h-[100dvh] bg-background safe-area-top safe-area-bottom overflow-x-hidden max-w-full">
+    <!-- Hero Banner Section -->
+    {bannerUrl ? (
+      <div class="relative h-[60dvh] md:h-[70dvh] overflow-hidden">
+        <img
+          src={bannerUrl}
+          alt={`Banner de ${restaurantName}`}
+          class="absolute inset-0 w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 banner-gradient"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+          <div class="text-center text-white px-4 sm:px-6 max-w-4xl mx-auto w-full">
+            {logoUrl && (
+              <div class="mb-6 sm:mb-8 floating-animation">
+                <img
+                  src={logoUrl}
+                  alt={`Logo de ${restaurantName}`}
+                  class="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full mx-auto border-2 sm:border-4 border-white shadow-2xl object-cover bg-white logo-glow"
+                />
+              </div>
+            )}
+            <h1 class="font-heading text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-3 sm:mb-4 text-shadow leading-tight">
+              {restaurantName}
+            </h1>
+            <div class="glass-effect rounded-full px-4 sm:px-6 lg:px-8 py-2 sm:py-3 inline-block">
+              <p class="text-sm sm:text-lg md:text-xl lg:text-2xl font-medium text-white">
+                Descubre nuestros sabores únicos
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce cursor-pointer">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </div>
+      </div>
+    ) : (
+      <!-- Fallback Header sin Banner -->
+      <div class="relative bg-gradient-to-r from-gray-800 to-gray-700 py-12 sm:py-16 lg:py-20 min-h-[40dvh] flex items-center">
+        <div class="text-center text-white px-4 sm:px-6 max-w-4xl mx-auto w-full">
+          {logoUrl && (
+            <div class="mb-6 sm:mb-8">
+              <img
+                src={logoUrl}
+                alt={`Logo de ${restaurantName}`}
+                class="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full mx-auto border-2 sm:border-4 border-white shadow-2xl object-cover bg-white"
+              />
+            </div>
+          )}
+          <h1 class="font-heading text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 sm:mb-4 leading-tight">
+            {restaurantName}
+          </h1>
+          <p class="text-lg sm:text-xl md:text-2xl text-gray-200">
+            Nuestro Menú
+          </p>
+        </div>
+      </div>
+    )}
+
+    <!-- Menu Section -->
+    <div class="relative bg-background pb-16 sm:pb-20 lg:pb-24">
+      <!-- Menu Title with Accent -->
+      <div class="text-center py-8 sm:py-12 lg:py-16 px-4 sm:px-6">
+        <div class="inline-block">
+          <h2 class="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-text mb-3 sm:mb-4">
+            Nuestro Menú
+          </h2>
+          <div class="h-0.5 sm:h-1 bg-gradient-to-r from-transparent via-[var(--branding-color)] to-transparent rounded-full"></div>
+        </div>
+      </div>
 
     {
       menuCategories.length > 0 ? (
-        <div id="menu-container">
-          <!-- Barra de Pestañas Adhesiva -->
-          <div class="sticky top-0 z-10 bg-zinc-900/80 backdrop-blur-lg shadow-md">
-            <div class="flex overflow-x-auto no-scrollbar border-b border-zinc-700" role="tablist">
-              {menuCategories.map((category, index) => (
-                <button
-                  role="tab"
-                  class={`${tabBaseClasses} ${index === 0 ? tabActiveClasses : tabInactiveClasses}`}
-                  data-tab-target={`#panel-${category.id}`}
-                >
-                  {category.name}
-                </button>
-              ))}
+        <div id="menu-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <!-- Modern Category Tabs -->
+          <div class="sticky top-0 z-20 py-4 sm:py-6">
+            <div class="glass-effect rounded-xl sm:rounded-2xl p-1 sm:p-2 border border-[var(--branding-color)]/20">
+              <div class="flex overflow-x-auto scrollbar-hide space-x-1 sm:space-x-2 pb-1" role="tablist">
+                {menuCategories.map((category, index) => (
+                  <button
+                    role="tab"
+                    class={`category-card px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-all duration-300 flex-shrink-0 ${
+                      index === 0 
+                        ? 'bg-[var(--branding-color)] text-white shadow-lg shadow-[var(--branding-color)]/30' 
+                        : 'text-text-secondary hover:text-text hover:bg-[var(--branding-color)]/10'
+                    }`}
+                    data-tab-target={`#panel-${category.id}`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <!-- Paneles de Contenido -->
-          <div class="p-4 sm:p-6 md:p-8">
+          <!-- Menu Content Panels -->
+          <div class="mt-6 sm:mt-8">
             {menuCategories.map((category, index) => (
               <div
                 id={`panel-${category.id}`}
                 class={`tab-panel ${index !== 0 ? 'hidden' : ''}`}
                 role="tabpanel"
               >
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {/* Category Header */}
+                <div class="text-center mb-8 sm:mb-12">
+                  <h3 class="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-text mb-2 sm:mb-3">
+                    {category.name}
+                  </h3>
+                  <div class="w-16 sm:w-20 h-0.5 sm:h-1 bg-[var(--branding-color)] rounded-full mx-auto"></div>
+                </div>
+
+                {/* Menu Items Grid */}
+                <div class="menu-grid mb-12 sm:mb-16">
                   {category.items
                     .filter((item) => item.isAvailable)
                     .map((item) => (
-                      <div data-menu-item={JSON.stringify(item)}>
-                        <MenuItemCard
-                          imageUrl={item.imageUrl || "/placeholder-image.jpg"}
-                          name={item.name}
-                          description={item.description || "Sin descripción disponible"}
-                          price={item.price}
-                          showAddButton={true}
-                          menuItemId={item.id}
-                          brandingColor={brandingColor}
-                        />
+                      <div 
+                        data-menu-item={JSON.stringify(item)}
+                        class="group"
+                      >
+                        <div class="bg-card backdrop-blur-sm rounded-xl sm:rounded-2xl overflow-hidden hover:bg-card/80 transition-all duration-300 hover:scale-105 hover:shadow-2xl border-2 border-[var(--branding-color)]/20 hover:border-[var(--branding-color)]/40 h-full flex flex-col">
+                          <div class="relative overflow-hidden">
+                            <img
+                              src={item.imageUrl || "/placeholder-image.jpg"}
+                              alt={item.name}
+                              class="w-full h-40 sm:h-48 lg:h-52 object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <div class="absolute inset-0 gradient-overlay"></div>
+                            <div class="absolute top-3 sm:top-4 right-3 sm:right-4">
+                              <div class="bg-[var(--branding-color)] text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-lg">
+                                ${item.price.toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div class="p-4 sm:p-5 lg:p-6 flex-1 flex flex-col">
+                            <h4 class="font-heading text-lg sm:text-xl font-bold text-text mb-2 group-hover:text-[var(--branding-color)] transition-colors line-clamp-2">
+                              {item.name}
+                            </h4>
+                            <p class="text-text-secondary text-xs sm:text-sm mb-4 sm:mb-6 line-clamp-3 flex-1">
+                              {item.description || "Sin descripción disponible"}
+                            </p>
+                            
+                            <button
+                              class="add-to-cart-btn w-full bg-[var(--branding-color)] hover:bg-[var(--branding-color)]/90 text-white font-bold py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow-[var(--branding-color)]/30 flex items-center justify-center space-x-2 text-sm sm:text-base mt-auto"
+                              data-menu-item-id={item.id}
+                              data-item-name={item.name}
+                              data-item-price={item.price}
+                              data-item-description={item.description || ""}
+                              data-item-image={item.imageUrl || "/placeholder-image.jpg"}
+                            >
+                              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                              </svg>
+                              <span class="hidden xs:inline">Agregar al Carrito</span>
+                              <span class="xs:hidden">Agregar</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                 </div>
@@ -122,42 +400,177 @@ const tabActiveClasses = `text-[var(--branding-color)] border-b-2 border-[var(--
           </div>
         </div>
       ) : error ? (
-        <div class="text-center text-red-400 py-20">
-          <p class="text-xl mb-2">{error}</p>
+        <div class="text-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
+          <div class="bg-red-900/20 border-2 border-red-500/30 rounded-xl sm:rounded-2xl p-6 sm:p-8 max-w-sm sm:max-w-md mx-auto">
+            <svg class="w-12 h-12 sm:w-16 sm:h-16 text-red-400 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <p class="text-lg sm:text-xl text-red-400 font-medium">{error}</p>
+          </div>
         </div>
       ) : (
-        <div class="text-center text-zinc-500 py-20">
-          <p class="text-xl mb-2">No hay platos disponibles</p>
+        <div class="text-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
+          <div class="bg-card border-2 border-[var(--branding-color)]/20 rounded-xl sm:rounded-2xl p-6 sm:p-8 max-w-sm sm:max-w-md mx-auto">
+            <svg class="w-12 h-12 sm:w-16 sm:h-16 text-text-secondary mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <p class="text-lg sm:text-xl text-text font-medium mb-1 sm:mb-2">No hay platos disponibles</p>
+            <p class="text-sm sm:text-base text-text-secondary">Vuelve pronto para ver nuestras novedades</p>
+          </div>
         </div>
       )
     }
+    </div>
   </main>
 
   <CartModal />
   <script src="../../../../../scripts/cart-manager.ts"></script>
+  <script src="../../../../../scripts/client-menu-page.ts"></script>
 
-  <script define:vars={{ tabActiveClasses, tabInactiveClasses }}>
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Tab functionality
       const tabs = document.querySelectorAll('[role="tab"][data-tab-target]');
       
       tabs.forEach(tab => {
         tab.addEventListener('click', () => {
+          const htmlTab = tab as HTMLElement;
+          
           // Ocultar todos los paneles
           document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
           
-          // Resetear todas las pestañas a su estado inactivo
+          // Resetear todas las pestañas
           tabs.forEach(t => {
-            t.className = t.className.replace(tabActiveClasses, tabInactiveClasses);
+            t.className = t.className.replace(
+              /bg-\[var\(--branding-color\)\]|text-white|shadow-lg|shadow-\[var\(--branding-color\)\]\/30/g, 
+              ''
+            );
+            t.className += ' text-text-secondary hover:text-text hover:bg-[var(--branding-color)]/10';
+            t.className = t.className.replace(/\s+/g, ' ').trim();
           });
 
-          // Activar la pestaña y panel clickeados
-          tab.className = tab.className.replace(tabInactiveClasses, tabActiveClasses);
-          const targetPanel = document.querySelector(tab.dataset.tabTarget);
-          if (targetPanel) {
-            targetPanel.classList.remove('hidden');
+          // Activar la pestaña clickeada
+          htmlTab.className = htmlTab.className.replace(/text-text-secondary|hover:text-text|hover:bg-\[var\(--branding-color\)\]\/10/g, '');
+          htmlTab.className += ' bg-[var(--branding-color)] text-white shadow-lg shadow-[var(--branding-color)]/30';
+          htmlTab.className = htmlTab.className.replace(/\s+/g, ' ').trim();
+          
+          // Mostrar el panel correspondiente
+          const targetSelector = htmlTab.getAttribute('data-tab-target');
+          if (targetSelector) {
+            const targetPanel = document.querySelector(targetSelector);
+            if (targetPanel) {
+              targetPanel.classList.remove('hidden');
+            }
           }
         });
       });
+      
+      // Smooth scroll para el indicador de scroll
+      const scrollIndicator = document.querySelector('.animate-bounce');
+      if (scrollIndicator) {
+        scrollIndicator.addEventListener('click', () => {
+          const menuSection = document.getElementById('menu-container');
+          if (menuSection) {
+            menuSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      // Funcionalidad mejorada para agregar al carrito
+      const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+      
+      const handleAddToCart = (btn: HTMLElement) => {
+        const itemId = btn.getAttribute('data-menu-item-id');
+        const itemName = btn.getAttribute('data-item-name');
+        
+        if (!itemId || !itemName) {
+          console.error('Faltan datos del item');
+          return;
+        }
+
+        // Intentar usar el cart manager si está disponible
+        if (window.cartManager && typeof window.cartManager.addItem === 'function') {
+          try {
+            window.cartManager.addItem(itemId);
+            console.log('Item agregado al carrito:', itemName);
+          } catch (error) {
+            console.error('Error al agregar al carrito:', error);
+            showErrorMessage('Error al agregar al carrito');
+          }
+        } else {
+          // Si no hay cart manager, mostrar mensaje de espera
+          console.log('Cart manager no disponible aún, reintentando...');
+          
+          // Reintentar después de un breve delay
+          setTimeout(() => {
+            if (window.cartManager && typeof window.cartManager.addItem === 'function') {
+              window.cartManager.addItem(itemId);
+            } else {
+              showErrorMessage('Error: El carrito no está disponible');
+            }
+          }, 500);
+        }
+      };
+
+      const showErrorMessage = (message: string) => {
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      };
+
+      // Agregar event listeners a los botones
+      addToCartButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const btn = e.currentTarget as HTMLElement;
+          
+          // Deshabilitar temporalmente el botón
+          btn.style.pointerEvents = 'none';
+          
+          // Feedback visual inmediato
+          const originalContent = btn.innerHTML;
+          btn.innerHTML = `
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span class="hidden xs:inline">Agregando...</span>
+            <span class="xs:hidden">...</span>
+          `;
+          
+          // Intentar agregar al carrito
+          handleAddToCart(btn);
+          
+          // Restaurar botón después de un delay
+          setTimeout(() => {
+            btn.innerHTML = originalContent;
+            btn.style.pointerEvents = 'auto';
+          }, 1000);
+        });
+      });
+
+      // Prevenir scroll horizontal
+      const preventHorizontalScroll = () => {
+        document.documentElement.style.overflowX = 'hidden';
+        document.body.style.overflowX = 'hidden';
+      };
+      
+      preventHorizontalScroll();
+      window.addEventListener('resize', preventHorizontalScroll);
     });
+
+    // Declaración para TypeScript
+    declare global {
+      interface Window {
+        cartManager: any;
+      }
+    }
   </script>
+
+  <!-- Footer académico específico para la vista del cliente -->
+  <AcademicFooter variant="minimal" />
+
 </Layout>

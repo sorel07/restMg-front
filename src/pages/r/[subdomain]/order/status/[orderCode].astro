@@ -13,10 +13,22 @@ if (!subdomain || !orderCode) {
 }
 
 let restaurantDetails;
+let bannerUrl: string | null = null;
+let logoUrl: string | null = null;
+let restaurantName: string = "Restaurante";
+let brandingColor: string = "#FF5733";
+
 try {
   console.log("🔍 [Astro] Obteniendo restaurante para subdomain:", subdomain);
   restaurantDetails = await getMenuBySubdomain(subdomain);
   console.log("✅ [Astro] Restaurante obtenido:", restaurantDetails);
+  
+  if (restaurantDetails) {
+    bannerUrl = restaurantDetails.bannerUrl || null;
+    logoUrl = restaurantDetails.logoUrl || null;
+    restaurantName = restaurantDetails.restaurantName || "Restaurante";
+    brandingColor = restaurantDetails.brandingColor || "#FF5733";
+  }
 } catch (error) {
   console.error("❌ [Astro] Error obteniendo restaurante:", error);
   return Astro.redirect("/");
@@ -28,12 +40,46 @@ console.log(
 );
 ---
 
+<style define:vars={{ brandingColor }}>
+  :root {
+    --branding-color: var(--brandingColor);
+  }
+</style>
+
 <Layout title="Estado del Pedido">
   <div class="min-h-screen bg-gray-900 py-8 print:bg-white">
-    <div id="order-container" class="max-w-2xl mx-auto px-4">
-      <div class="bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-        <h1 class="text-2xl font-bold text-white mb-2">Cargando pedido...</h1>
-        <p class="text-gray-400">Por favor, espera un momento.</p>
+    <div class="max-w-2xl mx-auto px-4">
+      
+      <!-- Banner del Restaurante -->
+      {bannerUrl && (
+        <div class="relative mb-8 rounded-xl overflow-hidden shadow-lg">
+          <img
+            src={bannerUrl}
+            alt={`Banner de ${restaurantName}`}
+            class="w-full h-32 md:h-40 object-cover"
+          />
+          <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+            <div class="text-center text-white p-4">
+              {logoUrl && (
+                <img
+                  src={logoUrl}
+                  alt={`Logo de ${restaurantName}`}
+                  class="w-12 h-12 md:w-16 md:h-16 rounded-full mx-auto mb-2 border-2 border-white shadow-lg object-cover bg-white"
+                />
+              )}
+              <h1 class="font-heading text-xl md:text-2xl font-bold text-white drop-shadow-lg">
+                {restaurantName}
+              </h1>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div id="order-container">
+        <div class="bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+          <h1 class="text-2xl font-bold text-white mb-2">Cargando pedido...</h1>
+          <p class="text-gray-400">Por favor, espera un momento.</p>
+        </div>
       </div>
     </div>
   </div>

@@ -71,6 +71,19 @@ class CartManager {
   private setupEventListeners() {
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
+      
+      // Buscar botón con el nuevo patrón (add-to-cart-btn)
+      const newAddButton = target.closest(".add-to-cart-btn") as HTMLElement;
+      if (newAddButton) {
+        e.preventDefault();
+        const menuItemId = newAddButton.getAttribute("data-menu-item-id");
+        if (menuItemId) {
+          this.addToCart(menuItemId);
+        }
+        return;
+      }
+
+      // Buscar botón con el patrón anterior (para compatibilidad)
       const addButton = target.closest("[data-add-to-cart]") as HTMLElement;
       if (addButton) {
         e.preventDefault();
@@ -90,6 +103,11 @@ class CartManager {
     }
     this.cartService?.addItem(menuItem, 1);
     this.showAddToCartFeedback(menuItem.name);
+  }
+
+  // Método público para agregar items al carrito
+  public addItem(menuItemId: string) {
+    this.addToCart(menuItemId);
   }
 
   private showAddToCartFeedback(itemName: string) {
@@ -409,6 +427,8 @@ class CartManager {
 
 if (typeof window !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
-    new CartManager();
+    const cartManager = new CartManager();
+    // Exponer el cart manager globalmente
+    (window as any).cartManager = cartManager;
   });
 }

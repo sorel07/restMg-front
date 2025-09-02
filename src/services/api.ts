@@ -165,6 +165,15 @@ export async function uploadLogo(file: File): Promise<{ url: string }> {
   return response.data;
 }
 
+export async function uploadBanner(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiClient.post("/branding/banner", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+}
+
 export async function getTables(): Promise<Table[]> {
   const response = await apiClient.get("/tables");
   return response.data;
@@ -231,3 +240,4 @@ export async function markOrderAsDelivered(orderId: string): Promise<void> {
 }
 
 export { apiClient };
+

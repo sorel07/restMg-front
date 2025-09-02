@@ -55,5 +55,9 @@ export interface ErrorResponse {
 
 export interface MenuBySubdomainResponse {
   restaurantId: string;
+  restaurantName: string;
+  logoUrl?: string | null;
+  bannerUrl?: string | null;
+  brandingColor?: string;
   categories: MenuCategory[];
 }

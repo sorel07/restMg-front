@@ -15,6 +15,7 @@ export interface RestaurantDetails {
   name: string;
   brandingColor?: string;
   logoUrl?: string | null;
+  bannerUrl?: string | null;
   clientUrl?: string;
   subdomain?: string;
 }

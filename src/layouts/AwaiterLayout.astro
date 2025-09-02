@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import AcademicFooter from "../components/AcademicFooter.astro";
 
 interface Props {
   title: string;
@@ -17,7 +18,7 @@ const { title } = Astro.props;
 
     
   </head>
-  <body class="bg-background font-body text-text-primary antialiased">
+  <body class="bg-background font-body text-text-primary antialiased min-h-screen flex flex-col">
     <header class="bg-surface border-b border-white/10 px-6 py-4">
       <div class="flex justify-between items-center">
         <h1 class="font-heading text-xl font-bold text-text-primary">RestMg Awaiter</h1>
@@ -26,9 +27,11 @@ const { title } = Astro.props;
         </button>
       </div>
     </header>
-    <main class="p-4 sm:p-6 md:p-8">
+    <main class="flex-1 p-4 sm:p-6 md:p-8">
       <slot />
     </main>
-    <script src="../scripts/logout-handler.ts"></script>
+    <AcademicFooter variant="compact" />
+    <script src="../scripts/logout-handler.ts">
+    </script>
   </body>
 </html>
